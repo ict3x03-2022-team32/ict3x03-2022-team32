@@ -18,6 +18,11 @@ pip install -r requirements.txt
 python3 wsgi.py
 ```
 
+To generate "requirements.txt"
+```
+pip freeze > requirements.txt
+```
+
 
 References:
 ```
