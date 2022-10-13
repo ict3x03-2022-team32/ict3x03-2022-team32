@@ -1,0 +1,133 @@
+{% extends 'layout.html' %}
+{% block content %}
+    
+    <div class="col-sm-10 ml-auto mr-auto ">
+        <H2>Industry</H2>
+        <form method="POST">
+            {{ form.csrf_token }}
+            {{ form.degName }}
+            <input type="submit" value="Filter">
+        </form>
+
+        <form action= "{{ url_for('add_industry') }}" method="POST">
+            <input type="submit" value="Add Data">
+        </form>
+
+        <form action= "{{ url_for('download1') }}" method="POST">
+         <a href="{{ url_for('download1') }}">Generate CSV Report File</a>
+        </form>
+        
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Industry</th>
+                    <th scope="col">Vacancy</th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Edit</th>
+                    <th scope="col">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                        <tr>
+                            <td>{{entry.industryName}}</td>
+                            <td>{{ entry.vacancy }}</td>
+                            <td>{{ entry.year }}</td>
+                            <td><a href="{{ url_for('update3', entry_id = entry.industryId) }}" class="btn btn-outline-danger btn-sm"  data-toggle="modal" data-target="#modaledit{{entry.industryId}}">Edit</a></td>
+                            <td><a href="{{ url_for('delete3', entry_id = entry.industryId) }}" class="btn btn-outline-danger btn-sm">Delete</a></td>
+                        </tr>
+                        <div id="modaledit{{entry.industryId}}" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                          
+                          
+                               <div class="modal-content">
+                          
+                          
+                                  <div class="modal-header">
+                          
+                          
+                                     <h4 class="modal-title">Update Information for Industry</h4>
+                          
+                          
+                                  </div>
+                          
+                          
+                                  <div class="modal-body">
+                          
+                          
+                                     <form action="{{url_for('update3')}}" method="POST">
+                          
+                          
+                                        <div class="form-group">
+                                         
+                          
+                          
+                                           <label>Industry:</label>
+                                           <input type="hidden"  name="id" value="{{entry.industryId}}">
+                                           <input type="text" class="form-control" name="industryName" value="{{entry.industryName}}">
+                          
+                          
+                                        </div>
+                          
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <label>Vacancy:</label>
+                          
+                                           <input type="text" class="form-control" name="vacancy" value="{{entry.vacancy}}">
+                          
+                          
+                                        </div>
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <label>Year:</label>
+                          
+                                           <input type="text" class="form-control" name="year" value="{{entry.year}}">
+                          
+                          
+                                        </div>                    
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <button class="btn btn-primary" type="submit">Update</button>
+                          
+                          
+                                        </div>
+                          
+                          
+                                     </form>
+                          
+                          
+                                  </div>
+                          
+                          
+                                  <div class="modal-footer">
+                          
+                          
+                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          
+                          
+                                  </div>
+                          
+                          
+                               </div>
+                          
+                          
+                            </div>
+                          
+                         </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+      
+{% endblock %}
+
