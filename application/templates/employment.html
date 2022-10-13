@@ -1,0 +1,169 @@
+{% extends 'layout.html' %}
+{% block content %}
+    
+    <div class="col-sm-10 ml-auto mr-auto ">
+        <H2>Employment</H2>
+        <form method="POST">
+            {{ form.csrf_token }}
+            {{ form.degName }}
+            <input type="submit" value="Filter">
+        </form>
+
+        <form action= "{{ url_for('add_employment') }}" method="POST">
+            <input type="submit" value="Add Data">
+        </form>
+
+        <form action= "{{ url_for('download') }}" method="POST">
+         <a href="{{ url_for('download') }}">Generate CSV Report File</a>
+        </form>
+
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">year</th>
+                    <th scope="col">schoolName</th>
+                    <th scope="col">degName</th>
+                    <th scope="col">employmentRate</th>
+                    <th scope="col">salary</th>
+                    <th scope="col">industry</th>
+                    <th scope="col">Edit</th>
+                    <th scope="col">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                        <tr>
+                            <td>{{ entry.year}}</td>
+                            <td>{{ entry.schoolName }}</td>
+                            <td>{{ entry.degName }}</td>
+                            <td>{{ entry.employmentRate }}</td>
+                            <td>{{ entry.salary }}</td>
+                            <td>{{ entry.industry }}</td>
+                            <td><a href="/update2/{{entry.geid}}" class="btn btn-outline-danger btn-sm"  data-toggle="modal" data-target="#modaledit{{entry.geid}}">Edit</a></td>
+                            <td><a href="{{ url_for('delete2', entry_id = entry.geid) }}" class="btn btn-outline-danger btn-sm">Delete</a></td>
+                        </tr>
+                        <div id="modaledit{{entry.geid}}" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                          
+                          
+                               <div class="modal-content">
+                          
+                          
+                                  <div class="modal-header">
+                          
+                          
+                                     <h4 class="modal-title">Update Information for Employment</h4>
+                          
+                          
+                                  </div>
+                          
+                          
+                                  <div class="modal-body">
+                          
+                          
+                                     <form action="{{url_for('update2')}}" method="POST">
+                          
+                          
+                                        <div class="form-group">
+                                         
+                          
+                          
+                                           <label>Year:</label>
+                                           <input type="hidden"  name="id" value="{{entry.geid}}">
+                                           <input type="text" class="form-control" name="year" value="{{entry.year}}">
+                          
+                          
+                                        </div>
+                          
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <label>School Name:</label>
+                          
+                                           <input type="text" class="form-control" name="schoolName" value="{{entry.schoolName}}">
+                          
+                          
+                                        </div>
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <label>Degree Name:</label>
+                          
+                                           <input type="text" class="form-control" name="degName" value="{{entry.degName}}">
+                          
+                          
+                                        </div>
+                    
+                                        <div class="form-group">
+                          
+                          
+                                            <label>Employment Rate:</label>
+                           
+                                            <input type="text" class="form-control" name="employmentRate" value="{{entry.employmentRate}}">
+                           
+                           
+                                         </div>
+                    
+                                         <div class="form-group">
+                          
+                          
+                                            <label>Salary:</label>
+                           
+                                            <input type="text" class="form-control" name="salary" value="{{entry.salary}}">
+                           
+                           
+                                         </div>
+                    
+                                         <div class="form-group">
+                          
+                          
+                                            <label>Industry:</label>
+                           
+                                            <input type="text" class="form-control" name="industry" value="{{entry.industry}}">
+                           
+                           
+                                         </div>
+                                        
+                          
+                          
+                                        <div class="form-group">
+                          
+                          
+                                           <button class="btn btn-primary" type="submit">Update</button>
+                          
+                          
+                                        </div>
+                          
+                          
+                                     </form>
+                          
+                          
+                                  </div>
+                          
+                          
+                                  <div class="modal-footer">
+                          
+                          
+                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          
+                          
+                                  </div>
+                          
+                          
+                               </div>
+                          
+                          
+                            </div>
+                          
+                         </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      
+{% endblock %}
+
