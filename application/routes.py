@@ -4,7 +4,7 @@ import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
 from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
-from application.models import employment, IncomeExpenses, User, Degree, University, industry, unienrolment
+from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -459,7 +459,7 @@ def dashboard():
                             industry_vacancy = json.dumps(industry_vacancy),
                             industry_industryName = json.dumps(industry_industryName),
                             employment_industry = json.dumps(employment_industry),
-                            employment_salary_arts = json.dumps(employment_salary_arts),
+                            employment_salary_arts = json.dumps(employment_salary_arts, cls=DecimalEncoder),                    #added , cls=DecimalEncoder
                             employment_year = json.dumps(employment_year),
                             industry_year = json.dumps(industry_year),
                             industry_unienrolment_industry = json.dumps(industry_unienrolment_industry),
@@ -468,13 +468,13 @@ def dashboard():
                             unienrolment_intake = json.dumps(unienrolment_intake),
                             unienrolment_enrolment = json.dumps(unienrolment_enrolment),
                             avg_employmentrate = json.dumps(avg_employmentrate),
-                            avg_salary = json.dumps(avg_salary),
+                            avg_salary = json.dumps(avg_salary, cls=DecimalEncoder),                                            #added , cls=DecimalEncoder
                             avg_unienrolment_employmentRate = json.dumps(avg_unienrolment_employmentRate),
                             unienrolment_employment_graduates = json.dumps(unienrolment_employment_graduates),
-                            employment_salary_business = json.dumps(employment_salary_business),
-                            employment_salary_engineering = json.dumps(employment_salary_engineering),
-                            employment_salary_Healthcare = json.dumps(employment_salary_Healthcare),
-                            employment_salary_ICT = json.dumps(employment_salary_ICT),
+                            employment_salary_business = json.dumps(employment_salary_business, cls=DecimalEncoder),            #added , cls=DecimalEncoder
+                            employment_salary_engineering = json.dumps(employment_salary_engineering, cls=DecimalEncoder),      #added , cls=DecimalEncoder
+                            employment_salary_Healthcare = json.dumps(employment_salary_Healthcare, cls=DecimalEncoder),        #added , cls=DecimalEncoder
+                            employment_salary_ICT = json.dumps(employment_salary_ICT, cls=DecimalEncoder),                      #added , cls=DecimalEncoder
                             unienrolment_business_graduates = json.dumps(unienrolment_business_graduates),
                             industry_unienrolment_business_vacancy = json.dumps(industry_unienrolment_business_vacancy),
                             unienrolment_business_intake = json.dumps(unienrolment_business_intake),
@@ -491,6 +491,6 @@ def dashboard():
                             industry_unienrolment_arts_vacancy = json.dumps(industry_unienrolment_arts_vacancy),
                             unienrolment_arts_intake = json.dumps(unienrolment_arts_intake),
                             unienrolment_arts_enrolment = json.dumps(unienrolment_arts_enrolment),
-                            industry_graduates = json.dumps(industry_graduates),
+                            industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
                             industry_graduates_label = json.dumps(industry_graduates_label)
     )

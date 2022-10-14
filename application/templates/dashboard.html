@@ -1,0 +1,551 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <div class="w-100 mb-3">
+        <h1>Dashboard</h1>
+    </div>
+ 
+    <div class="row">
+        <div class="col-xs-10 col-sm-6 col-md-6">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="vacancy_industry"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-10 col-sm-6 col-md-6">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="graduates_industry"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="industry_salary"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="industry_information"></canvas>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Type of Industry:</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table-responsive">
+                                <tr>
+                                    <td>
+                                        <button ID="button5" class="btn btn-primary" onclick="UpdateChart('ICT')">ICT</button>
+                                        
+                                    </td>
+                                    <td>
+                                        <button ID="button2" class="btn btn-primary" onclick="UpdateChart('Engineering')">Engineering</button>
+                                    </td>
+                                    <td>
+                                        <button ID="button3" class="btn btn-primary" onclick="UpdateChart('Healthcare')">Healthcare</button>
+                                    </td>
+                                    <td>
+                                        <button ID="button4" class="btn btn-primary" onclick="UpdateChart('Arts')">Arts</button>
+                                    </td>
+                                    <td>
+                                        <button ID="button1" class="btn btn-primary" onclick="UpdateChart('Business')">Business</button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="employmentrate_salary"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="card card-style mb-2">
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="employmentrate_graduates"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascript %}
+<script>
+
+
+    Chart.scaleService.updateScaleDefaults('linear', {
+            ticks: {
+                min: 0
+            }
+    });
+
+
+    let industry_vacancy = JSON.parse({{industry_vacancy | tojson}})
+    let industry_industryName = JSON.parse({{industry_industryName | tojson}})
+
+    let vacancy_industry_chart = new Chart(vacancy_industry, {
+            type: 'pie',
+            data: {
+                labels: industry_industryName,
+                datasets: [{
+                    label: "Industry Vacancy",
+                    data: industry_vacancy,
+            backgroundColor: ['#5DA5DA ', '#FAA43A', '#60BD68',
+                '#B276B2', '#E16851', '#FB8267'],
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        }],
+            },
+        options: {
+                title: {
+                    display: true,
+                        text: "Vacancy",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "right",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            }
+            }
+        })
+
+        let industry_graduates = JSON.parse({{industry_graduates | tojson}})
+        let industry_graduates_label = JSON.parse({{industry_graduates_label | tojson}})
+
+        let graduates_industry_chart = new Chart(graduates_industry, {
+            type: 'pie',
+            data: {
+                labels: industry_graduates_label,
+                datasets: [{
+                    label: "Industry Graduates",
+                    data: industry_graduates,
+            backgroundColor: ['#5DA5DA ', '#FAA43A', '#60BD68',
+                '#B276B2', '#E16851', '#FB8267'],
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        }],
+            },
+        options: {
+                title: {
+                    display: true,
+                        text: "Total Employees Over The Years",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "right",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            }
+            }
+        })
+
+
+        let employment_industry = JSON.parse({{employment_industry | tojson}})
+        let employment_salary_arts = JSON.parse({{employment_salary_arts | tojson}})
+        let employment_year = JSON.parse({{employment_year | tojson}})
+        let employment_salary_business = JSON.parse({{employment_salary_business | tojson}})
+        let employment_salary_engineering = JSON.parse({{employment_salary_engineering | tojson}})
+        let employment_salary_Healthcare = JSON.parse({{employment_salary_Healthcare | tojson}})
+        let employment_salary_ICT = JSON.parse({{employment_salary_ICT | tojson}})
+
+        let industry_salary_chart = new Chart(industry_salary, {
+            type: 'line',
+            data: {
+                labels: employment_year,
+                datasets: [{
+                    label: employment_industry[0],
+                    data: employment_salary_arts,
+                    backgroundColor: '#5DA5DA',
+            fill: false,
+            borderColor:'#5DA5DA ',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1
+        }, {
+            label: employment_industry[1],
+                    data: employment_salary_business,
+                    backgroundColor: '#FAA43A',
+            fill: false,
+            borderColor:'#FAA43A ',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1
+        }, {
+            label: employment_industry[2],
+                    data: employment_salary_engineering,
+                    backgroundColor: '#60BD68',
+            fill: false,
+            borderColor:'#60BD68',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1
+        }, {
+            label: employment_industry[3],
+                    data: employment_salary_Healthcare,
+                    backgroundColor: '#B276B2',
+            fill: false,
+            borderColor:'#B276B2',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1
+        }, {
+            label: employment_industry[4],
+                    data: employment_salary_ICT,
+                    backgroundColor: '#FB8267',
+            fill: false,
+            borderColor:'#FB8267',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1
+        }],
+            },
+        options: {
+            indexAxis: 'y',
+                title: {
+                    display: true,
+                        text: "Salary Growth",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "right",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            },
+            
+            }
+        })
+
+     
+
+        let industry_year = JSON.parse({{industry_year  | tojson}})
+        let industry_unienrolment_industry = JSON.parse({{industry_unienrolment_industry | tojson}})
+        let  unienrolment_graduates = JSON.parse({{ unienrolment_graduates | tojson}})
+        let industry_unienrolment_vacancy = JSON.parse({{industry_unienrolment_vacancy | tojson}})
+        let unienrolment_intake = JSON.parse({{unienrolment_intake | tojson}})
+        let unienrolment_enrolment = JSON.parse({{unienrolment_enrolment | tojson}})
+
+        function repeatColors(colors) {
+            return colors;
+        }
+
+
+        let industry_information_chart = new Chart(industry_information, {
+            type: 'bar',
+            data: {
+                labels: industry_year,
+                datasets: [{
+                    label: "Graduate",
+                    data: unienrolment_graduates,
+            backgroundColor: repeatColors('#5DA5DA'),
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        },{
+            label: "Vacancy",
+            data: industry_unienrolment_vacancy,
+            backgroundColor: repeatColors('#FAA43A'),
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        }, {
+            label: "Intake",
+            data: unienrolment_intake,
+            backgroundColor: repeatColors('#60BD68'),
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        }, {
+            label: "Enrolment",
+            data: unienrolment_enrolment,
+            backgroundColor: repeatColors('#B276B2'),
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5
+        }],
+        },
+        options: {
+                title: {
+                    display: true,
+                        text: "Industry (ICT) Information",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "right",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            },
+            
+            }
+        })
+        
+        //Business
+        let unienrolment_business_graduates = JSON.parse({{unienrolment_business_graduates | tojson}})
+        let industry_unienrolment_business_vacancy = JSON.parse({{industry_unienrolment_business_vacancy | tojson}})
+        let unienrolment_business_intake = JSON.parse({{unienrolment_business_intake | tojson}})
+        let unienrolment_business_enrolment = JSON.parse({{unienrolment_business_enrolment | tojson}})
+
+        //Engineering
+        let unienrolment_engineering_graduates = JSON.parse({{unienrolment_engineering_graduates | tojson}})
+        let industry_unienrolment_engineering_vacancy = JSON.parse({{industry_unienrolment_engineering_vacancy | tojson}})
+        let unienrolment_engineering_intake = JSON.parse({{unienrolment_engineering_intake | tojson}})
+        let unienrolment_engineering_enrolment  = JSON.parse({{unienrolment_engineering_enrolment | tojson}})
+
+        //Healthcare
+        let unienrolment_healthcare_graduates = JSON.parse({{unienrolment_healthcare_graduates | tojson}})
+        let industry_unienrolment_healthcare_vacancy = JSON.parse({{industry_unienrolment_healthcare_vacancy | tojson}})
+        let unienrolment_healthcare_intake = JSON.parse({{unienrolment_healthcare_intake | tojson}})
+        let unienrolment_healthcare_enrolment = JSON.parse({{unienrolment_healthcare_enrolment | tojson}})
+
+        //Arts
+        let unienrolment_arts_graduates = JSON.parse({{unienrolment_arts_graduates | tojson}})
+        let industry_unienrolment_arts_vacancy = JSON.parse({{industry_unienrolment_arts_vacancy | tojson}})
+        let unienrolment_arts_intake = JSON.parse({{unienrolment_arts_intake | tojson}})
+        let unienrolment_arts_enrolment = JSON.parse({{unienrolment_arts_enrolment | tojson}})
+
+        function UpdateChart(industry){
+
+            if (industry == "Business"){
+                industry_information_chart.data.datasets[0].data = unienrolment_business_graduates;
+                industry_information_chart.data.datasets[1].data = industry_unienrolment_business_vacancy;
+                industry_information_chart.data.datasets[2].data = unienrolment_business_intake;
+                industry_information_chart.data.datasets[3].data = unienrolment_business_enrolment;
+                industry_information_chart.options.title.text = "Industry (" + industry + ") Information"; 
+
+            }else if (industry == "Engineering"){
+                industry_information_chart.data.datasets[0].data = unienrolment_engineering_graduates;
+                industry_information_chart.data.datasets[1].data = industry_unienrolment_engineering_vacancy;
+                industry_information_chart.data.datasets[2].data = unienrolment_engineering_intake;
+                industry_information_chart.data.datasets[3].data = unienrolment_engineering_enrolment;
+                industry_information_chart.options.title.text = "Industry (" + industry + ") Information"; 
+
+            }else if (industry == "Healthcare"){
+                industry_information_chart.data.datasets[0].data = unienrolment_healthcare_graduates;
+                industry_information_chart.data.datasets[1].data = industry_unienrolment_healthcare_vacancy;
+                industry_information_chart.data.datasets[2].data = unienrolment_healthcare_intake;
+                industry_information_chart.data.datasets[3].data = unienrolment_healthcare_enrolment;
+                industry_information_chart.options.title.text = "Industry (" + industry + ") Information"; 
+
+            }else if (industry == "Arts"){
+                industry_information_chart.data.datasets[0].data = unienrolment_arts_graduates;
+                industry_information_chart.data.datasets[1].data = industry_unienrolment_arts_vacancy;
+                industry_information_chart.data.datasets[2].data = unienrolment_arts_intake;
+                industry_information_chart.data.datasets[3].data = unienrolment_arts_enrolment;
+                industry_information_chart.options.title.text = "Industry (" + industry + ") Information"; 
+            }else{
+                industry_information_chart.data.datasets[0].data = unienrolment_graduates;
+                industry_information_chart.data.datasets[1].data = industry_unienrolment_vacancy;
+                industry_information_chart.data.datasets[2].data = unienrolment_intake;
+                industry_information_chart.data.datasets[3].data = unienrolment_enrolment;
+                industry_information_chart.options.title.text = "Industry (" + industry + ") Information"; 
+            }
+            
+            industry_information_chart.update();
+        }
+
+        let avg_employmentrate = JSON.parse({{avg_employmentrate | tojson}})
+        let avg_salary = JSON.parse({{avg_salary | tojson}})
+
+        let employmentrate_salary_chart = new Chart(employmentrate_salary, {
+            type: 'bar',
+            data: {
+                labels: employment_industry,
+                datasets: [{
+                    label: "Employment rate",
+                    data: avg_employmentrate,
+            backgroundColor: repeatColors('rgba(174, 214, 241, 0.5)'),
+            borderWidth: 1,
+            hoverBorderColor: "black",
+            hoverBorderWidth: 2,
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            pointHoverRadius: 5,
+            yAxisID: 'percent'
+        },{
+            label: "Salary",
+            data: avg_salary,
+            backgroundColor: repeatColors('#FAA43A'),
+            fill: false,
+            borderColor:'#FAA43A',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1,
+            yAxisID: 'y',
+            type: 'line'
+        }],
+        },
+        options: {
+                title: {
+                    display: true,
+                        text: "Employment Rate vs Salary",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "bottom",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            },
+            scales:{
+               yAxes:[{
+                    beginAtZero: true,
+                    type: 'linear',
+                    position: 'left',
+                    id: 'y'
+               }, {
+                    beginAtZero: true,
+                    type: 'linear',
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea:false
+                    },
+                    ticks:{
+                        callback: function(value, index, values){
+                            return `${value} %`
+                        }
+                    },
+                    id: 'percent'
+               }]
+            }
+            
+            }
+        })
+
+        let avg_unienrolment_employmentRate = JSON.parse({{avg_unienrolment_employmentRate | tojson}})
+        let unienrolment_employment_graduates = JSON.parse({{unienrolment_employment_graduates | tojson}})
+
+        let employmentrate_graduates_chart = new Chart(employmentrate_graduates, {
+            type: 'line',
+            data: {
+                labels: employment_industry,
+                datasets: [{
+                    label: "Employment Rate",
+                    data: avg_unienrolment_employmentRate,
+                    backgroundColor: '#5DA5DA',
+            fill: false,
+            borderColor:'#5DA5DA ',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1,
+            yAxisID: 'percent'
+        }, {
+            label: "Industries",
+            data: unienrolment_employment_graduates,
+            backgroundColor: repeatColors('#FAA43A'),
+            fill: false,
+            borderColor:'#FAA43A',
+            hoverBackgroundColor: 'rgba(154, 245, 140)',
+            lineTension:0.1,
+            yAxisID: 'y',
+            type: 'line'
+        }],
+            },
+        options: {
+                title: {
+                    display: true,
+                        text: "Employment Rate in Industries",
+                            fontSize: 20,
+            },
+                legend: {
+                    position: "bottom",
+                        labels: {
+                        fontColor: "gray"
+                    },
+                    display: true,
+            },
+
+                elements: {
+                    hitRadius: 3,
+            },
+            scales:{
+               yAxes:[{
+                    beginAtZero: true,
+                    type: 'linear',
+                    position: 'left',
+                    id: 'y'
+               }, {
+                    beginAtZero: true,
+                    type: 'linear',
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea:false
+                    },
+                    ticks:{
+                        callback: function(value, index, values){
+                            return `${value} %`
+                        }
+                    },
+                    id: 'percent'
+               }]
+            }
+            
+            }
+        })
+</script>
+{% endblock%}
+
+{% endblock %}

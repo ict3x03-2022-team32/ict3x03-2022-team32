@@ -1,8 +1,11 @@
+from unicodedata import decimal
 from application import db, login_manager
 from application import bcrypt
 from datetime import datetime
 import enum
 from flask_login import UserMixin
+import json
+from decimal import *
 
 
 @login_manager.user_loader
@@ -104,4 +107,13 @@ class unienrolment(db.Model):
 
 
 
+#new
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # 👇️ if passed in object is instance of Decimal
+        # convert it to a string
+        if isinstance(obj, Decimal):
+            return str(obj)
+        # 👇️ otherwise use the default behavior
+        return json.JSONEncoder.default(self, obj)
 
