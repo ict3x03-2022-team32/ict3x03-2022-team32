@@ -15,7 +15,21 @@ pipeline {
 	}	
 	post {
 		      success {
-			            dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+			      dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+			      setBuildStatus("Build succeeded", "SUCCESS");
+		      }
+		      failure {
+			      setBuildStatus ("Build Failed", "FAILURE");
 		      }
 	}
+}
+
+void setBuildStatus(String message, String state) {
+    step([
+        $class: "GitHubCommitStatusSetter",
+        reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/ict3x03-2022-team32/ict3x03-2022-team32"],
+        contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+        errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+        statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]]]
+    ]);
 }
