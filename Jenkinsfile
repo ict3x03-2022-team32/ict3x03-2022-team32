@@ -3,7 +3,7 @@ pipeline {
 	stages {
 		stage('Checkout SCM') {
 			steps {
-				git '/home/JenkinsDependencyCheckTest'
+				git branch:'main', url:'https://github.com/ict3x03-2022-team32/ict3x03-2022-team32'
 			}
 		}
 
