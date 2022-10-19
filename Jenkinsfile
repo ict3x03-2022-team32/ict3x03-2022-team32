@@ -7,24 +7,15 @@ pipeline {
       }
     }
 
-    stage('No Converter-0') {
-      steps {
-        echo 'No converter for Builder: org.jenkinsci.plugins.DependencyCheck.DependencyCheckToolBuilder'
-      }
-    }
-
-    stage('No Converter-1') {
-      steps {
-        echo 'No converter for Builder: com.cloudbees.jenkins.GitHubSetCommitStatusBuilder'
-      }
-    }
-
-  }
-  post {
-    always {
-      echo 'No converter for Publisher: org.jenkinsci.plugins.DependencyCheck.DependencyCheckPublisher'
-      echo 'No converter for Publisher: com.cloudbees.jenkins.GitHubCommitNotifier'
-    }
-
-  }
+    stage('OWASP DependencyCheck') {
+			      steps {
+				            dependencyCheck additionalArguments: '--format HTML --format XML', odcInstallation: 'Default'
+			      }
+		}
+	}	
+	post {
+		      success {
+			            dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+		      }
+	}
 }
