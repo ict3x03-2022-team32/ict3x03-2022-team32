@@ -532,9 +532,8 @@ def fileUploaded(filename):
     csvData = pd.read_csv(filename, names=col_names, header=None)
     # Loop through the Rows
     for i,row in csvData.iterrows():
-        sql = "INSERT INTO employment (year,schooName,degName, employmentRate, salary , industry) VALUES (%s, %s, %s, %s, %s, %s)"
         value = (str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry'])
-        print(sql)
+        sql = '''INSERT INTO employment (year, schoolName, degName, employmentRate, salary, industry) VALUES (%s, '%s', '%s', %s, %s, '%s')'''%value
         db.session.execute(sql, value, if_exists='append')
         db.session.commit()
     
