@@ -4,6 +4,7 @@ import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
 from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
+
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
 from application import db
 import json
@@ -12,13 +13,21 @@ from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
 
+from application.form import UploadForm
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from werkzeug.utils import secure_filename
+import pandas as pd
+
+
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
 
-
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template('csrf_error.html', reason=e.description), 400
 
 @app.route('/')
 @app.route('/home')
@@ -494,3 +503,45 @@ def dashboard():
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
                             industry_graduates_label = json.dumps(industry_graduates_label)
     )
+
+#------------------------Upload CSV file function (to upload dataset into database)------------------------------------
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+# @login_required
+def upload():
+    form = UploadForm()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            f = form.upload.data
+            filename = secure_filename(f.filename)
+            f.save(filename)
+            return fileUploaded(filename)
+        # else 
+        #     flash
+    return render_template('uploadDataset.html', form=form)
+
+def fileUploaded(filename):
+    #--------For testing CSRF Tokens---------------#
+    # with open(filename, 'r') as f: 
+    #     return render_template('post_example.html', text=f.read(), filename = filename)
+    
+    # CVS Column Names
+    col_names = ['year','schooName','degName', 'employmentRate', 'salary' , 'industry']
+    # Use Pandas to parse the CSV file
+    csvData = pd.read_csv(filename, names=col_names, header=None)
+    # Loop through the Rows
+    for i,row in csvData.iterrows():
+        sql = "INSERT INTO employment (year,schooName,degName, employmentRate, salary , industry) VALUES (%s, %s, %s, %s, %s, %s)"
+        value = (str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry'])
+        print(sql)
+        db.session.execute(sql, value, if_exists='append')
+        db.session.commit()
+    
+    
+    #     print(i,row['year'],row['schooName'],row['degName'],row['employmentRate'],row['salary'],row['industry'])
+    # with open(filename, encoding='utf-8', newline='') as csv_file:
+    #     csvreader = csv.DictReader(filename, quotechar='"')
+    #employment_row = employment(firstname='john', lastname='doe', email='jd@example.com', age=23, bio='Biology student')
+    # db.session.add(employment_row)
+    # db.session.commit()
