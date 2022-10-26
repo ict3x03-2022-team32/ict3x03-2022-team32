@@ -3,7 +3,7 @@ from os import write
 import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
-from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
+from application.form import MessageDataForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
 from application import db
 import json
@@ -17,7 +17,11 @@ from io import StringIO
 import csv
 from csv import writer
 
-
+messages = [{'title': 'Adam',
+             'content': 'Nice bro!'},
+            {'title': 'Message Two',
+             'content': 'Message Two Content'}
+            ]
 
 
 @app.route('/')
@@ -306,9 +310,11 @@ def logout_page():
 
 #------------------------Dash board Functions (Use SQL queries to retreive and analyse data )------------------------------------
 
-@app.route('/dashboard')
+@app.route('/dashboard' , methods = ["POST", "GET"])
 @login_required
 def dashboard():
+
+    form = MessageDataForm()
     #Pie chart: Industry vacancy in latest year
     #MAX year
     #SELECT MAX(year) FROM industry
@@ -492,5 +498,7 @@ def dashboard():
                             unienrolment_arts_intake = json.dumps(unienrolment_arts_intake),
                             unienrolment_arts_enrolment = json.dumps(unienrolment_arts_enrolment),
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
-                            industry_graduates_label = json.dumps(industry_graduates_label)
+                            industry_graduates_label = json.dumps(industry_graduates_label),
+                            messages=messages,
+                            form=form
     )

@@ -8,7 +8,7 @@ from urllib.parse import quote
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "JLKJJJO3IURYoiouolnojojouuoo=5y9y9youjuy952oohhbafdnoglhoho"
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenseDB.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = ('mysql+pymysql://root:%s@localhost:3306/expenseDB' % quote('P@ssw0rdpsBenU7Wka'))
+app.config['SQLALCHEMY_DATABASE_URI'] = ('mysql+pymysql://root:%s@localhost:3306/expenseDB' % quote('root'))
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)

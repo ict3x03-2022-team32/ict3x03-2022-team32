@@ -17,6 +17,11 @@ class Form(FlaskForm):
     year = SelectField('year',choices=[])
     colour = SelectField('colour',choices=[])
 
+class MessageDataForm(FlaskForm):
+    message_field = StringField(label='Username:', validators=[DataRequired()])
+    submit = SubmitField('Post Comment')
+
+
 
 class RegisterForm(FlaskForm):
     def validate_username(self, username_to_check):
