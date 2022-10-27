@@ -56,6 +56,7 @@ class UserDataForm(FlaskForm):
     submit = SubmitField('Generate Report')
 
 
+
 class EmploymentDataForm(FlaskForm):
     year = SelectField('Year', validators=[DataRequired()],
                                 choices=['2015', '2016',
