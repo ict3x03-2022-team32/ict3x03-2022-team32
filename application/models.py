@@ -105,7 +105,17 @@ class unienrolment(db.Model):
         self.enrolment = enrolment
         self.graduates = graduates
 
+class comments(db.Model):
+    cid = db.Column(db.Integer,primary_key=True)
+    comment = db.Column(db.String(60), nullable=False)
+    datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    cname = db.Column(db.String(60), nullable=False)
 
+    def __init__(self, cid, comment, datetime, cname):
+        self.cid = cid
+        self.comment = comment
+        self.datetime = datetime
+        self.cname = cname
 
 #new
 class DecimalEncoder(json.JSONEncoder):

@@ -4,7 +4,7 @@ import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
 from application.form import MessageDataForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
-from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
+from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -315,6 +315,7 @@ def logout_page():
 def dashboard():
 
     form = MessageDataForm()
+    entries = comments.query.filter_by()
     #Pie chart: Industry vacancy in latest year
     #MAX year
     #SELECT MAX(year) FROM industry
@@ -500,5 +501,6 @@ def dashboard():
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
                             industry_graduates_label = json.dumps(industry_graduates_label),
                             messages=messages,
-                            form=form
+                            form=form,
+                            entries = entries
     )

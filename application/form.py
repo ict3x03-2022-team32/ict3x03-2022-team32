@@ -18,7 +18,7 @@ class Form(FlaskForm):
     colour = SelectField('colour',choices=[])
 
 class MessageDataForm(FlaskForm):
-    message_field = StringField(label='Username:', validators=[DataRequired()])
+    message_field = StringField(label='cid: ', validators=[DataRequired()])
     submit = SubmitField('Post Comment')
 
 
