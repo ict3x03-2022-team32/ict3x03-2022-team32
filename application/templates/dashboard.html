@@ -116,17 +116,10 @@
                     {{ form.csrf_token() }}
                     <fieldset class="form-group">
                         <legend class="mb-4">Post a comment!</legend>
-                        
-                        <!-- User ID -->
-                        <div class="form-group"> 
-                            {{ form.message_field.label(class = "form-control-label") }}
-                            {{ form.message_field(class = "form-control form-control-sm") }}
-
-                        </div>
-
                         <!-- Comments -->
                         <div class="form-group">
-                            <textarea placeholder="Enter your message here" name="message" cols="50" rows="5"></textarea>
+                            {{ form.comments.label(class = "form-control-label") }}
+                            {{ form.comments(class = "form-control form-control-sm") }}
                         </div>
     
                         <!-- Submit Button -->

@@ -1,10 +1,13 @@
 # from werkzeug.wrappers import request
+from datetime import date
+from datetime import datetime
 from os import write
 import re
+from xmlrpc.client import DateTime
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
 from application.form import MessageDataForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
-from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments
+from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -17,11 +20,6 @@ from io import StringIO
 import csv
 from csv import writer
 
-messages = [{'title': 'Adam',
-             'content': 'Nice bro!'},
-            {'title': 'Message Two',
-             'content': 'Message Two Content'}
-            ]
 
 
 @app.route('/')
@@ -313,9 +311,19 @@ def logout_page():
 @app.route('/dashboard' , methods = ["POST", "GET"])
 @login_required
 def dashboard():
-
     form = MessageDataForm()
+    
     entries = comments.query.filter_by()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            comment = request.form['comments']
+            new_date = datetime.now()
+            cname = current_user.username
+            entry = comments(comment,new_date,cname)
+            db.session.add(entry)
+            db.session.commit()
+            flash(f"Comment Added", "success")
+            return redirect(url_for('dashboard'))
     #Pie chart: Industry vacancy in latest year
     #MAX year
     #SELECT MAX(year) FROM industry
@@ -500,7 +508,6 @@ def dashboard():
                             unienrolment_arts_enrolment = json.dumps(unienrolment_arts_enrolment),
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
                             industry_graduates_label = json.dumps(industry_graduates_label),
-                            messages=messages,
                             form=form,
                             entries = entries
     )

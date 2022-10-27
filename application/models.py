@@ -111,8 +111,7 @@ class comments(db.Model):
     datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     cname = db.Column(db.String(60), nullable=False)
 
-    def __init__(self, cid, comment, datetime, cname):
-        self.cid = cid
+    def __init__(self, comment, datetime, cname):
         self.comment = comment
         self.datetime = datetime
         self.cname = cname
