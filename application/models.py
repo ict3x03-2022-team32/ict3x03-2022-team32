@@ -33,12 +33,6 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(length=60), nullable=False)
     isadmin = db.Column(db.Integer)
 
-    def __init__(self, email_address, username, isadmin=ACCESS['user']):
-        self.email_address = email_address
-        self.username = username
-        self.password_hash = ''
-        self.isadmin = isadmin
-
     def is_admin(self):
         return self.isadmin == ACCESS['admin']
 
@@ -52,6 +46,14 @@ class User(db.Model, UserMixin):
         return '<User {0}>'.format(self.username)
 
     @property
+    def normaluser(self):
+        return self.isadmin
+
+    @normaluser.setter
+    def set_user(self, value):
+        self.isadmin == ACCESS['user']
+
+    @property
     def password(self):
         return self.password
 
@@ -61,6 +63,8 @@ class User(db.Model, UserMixin):
 
     def check_password_correction(self, attempted_password):
         return bcrypt.check_password_hash(self.password_hash, attempted_password)
+
+
 
 
 

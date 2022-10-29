@@ -6,7 +6,7 @@ import re
 from xmlrpc.client import DateTime
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
-from application.form import MessageDataForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
+from application.form import MessageDataForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, UserDetailForm
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
 from application import db
 import json
@@ -52,6 +52,65 @@ def requires_access_level(access_level):
 def control_panel():
     all_users = User.query.all()
     return render_template('control_panel.html', users=all_users, pageTitle='My Flask App Control Panel')
+
+
+# user details & update
+@app.route('/user_detail/<int:user_id>', methods=['GET','POST'])
+@requires_access_level(ACCESS['admin'])
+def user_detail(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+    form.id.data = user.id
+    # form.name.data = user.name
+    form.email.data = user.email_address
+    form.username.data = user.username
+    form.isadmin.data = user.isadmin
+    return render_template('user_detail.html', form=form, pageTitle='User Details')
+
+# update user
+@app.route('/update_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+
+    orig_user = user.username # get user details stored in the database - save username into a variable
+
+    if form.validate_on_submit():
+        user.email_address = form.email.data
+
+        new_user = form.username.data
+
+        if new_user != orig_user: # if the form data is not the same as the original username
+            valid_user = User.query.filter_by(username=new_user).first() # query the database for the usernam
+            if valid_user is not None:
+                flash("That username is already taken...", 'danger')
+                return redirect(url_for('control_panel'))
+
+        # if the values are the same, we can move on.
+        user.username = form.username.data
+        user.isadmin = request.form['access_lvl']
+        db.session.commit()
+        flash('The user has been updated.', 'success')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+# delete user
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def delete_user(user_id):
+    if request.method == 'POST': #if it's a POST request, delete the friend from the database
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        flash('User has been deleted.', 'success')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+
+    ################ USER ACCESS FUNCTIONALITY ###################
 
 @app.route('/')
 @app.route('/home')
@@ -119,7 +178,7 @@ def register_page():
     if form.validate_on_submit():
         user_to_create = User(username=form.username.data,
                               email_address=form.email_address.data,
-                              password=form.password1.data)
+                              password=form.password1.data, isadmin=0)
         db.session.add(user_to_create)
         db.session.commit()
         login_user(user_to_create)
