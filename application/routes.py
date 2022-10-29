@@ -14,13 +14,44 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
+from functools import wraps
 
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
+ACCESS = {
+    'user': 0,
+    'admin': 1
+}
 
+
+### custom wrap to determine access level ###
+def requires_access_level(access_level):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated: #the user is not logged in
+                return redirect(url_for('login'))
+
+            #user = User.query.filter_by(id=current_user.id).first()
+
+            if not current_user.allowed(access_level):
+                flash('You do not have access to this resource.', 'danger')
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+    ################ ADMIN ACCESS FUNCTIONALITY ###################
+
+# control panel
+@app.route('/control_panel')
+@requires_access_level(ACCESS['admin'])
+def control_panel():
+    all_users = User.query.all()
+    return render_template('control_panel.html', users=all_users, pageTitle='My Flask App Control Panel')
 
 @app.route('/')
 @app.route('/home')
@@ -511,3 +542,4 @@ def dashboard():
                             form=form,
                             entries = entries
     )
+

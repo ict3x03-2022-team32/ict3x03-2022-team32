@@ -21,13 +21,35 @@ class University(db.Model):
     uId = db.Column(db.Integer(), primary_key=True)
     uname = db.Column(db.String(length=60), nullable=False, unique=True)
 
+ACCESS = {
+    'user': 0,
+    'admin': 1
+}
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     username = db.Column(db.String(length=30), nullable=False, unique=True)
     email_address = db.Column(db.String(length=50), nullable=False, unique=True)
     password_hash = db.Column(db.String(length=60), nullable=False)
+    isadmin = db.Column(db.Integer)
 
+    def __init__(self, email_address, username, isadmin=ACCESS['user']):
+        self.email_address = email_address
+        self.username = username
+        self.password_hash = ''
+        self.isadmin = isadmin
+
+    def is_admin(self):
+        return self.isadmin == ACCESS['admin']
+
+    def is_user(self):
+        return self.isadmin == ACCESS['user']
+
+    def allowed(self, access_level):
+        return self.isadmin >= access_level
+
+    def __repr__(self):
+        return '<User {0}>'.format(self.username)
 
     @property
     def password(self):
