@@ -1,5 +1,7 @@
 # from werkzeug.wrappers import request
+import os
 from os import write
+
 import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
@@ -17,13 +19,20 @@ from application.form import UploadForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from werkzeug.utils import secure_filename
 import pandas as pd
+from pyparsing import *
 
+
+import pymysql
 
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
+ALLOWED_EXTENSIONS = {'txt', 'csv'}
+script_dir = os.path.dirname(__file__)
+rel_path = "..\\tempFileUploadDir\\"
+UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -506,41 +515,153 @@ def dashboard():
 
 #------------------------Upload CSV file function (to upload dataset into database)------------------------------------
 
+def check_IfAllowedFile(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def check_IfEmpty(file):
+    content = open(file, 'r').read()
+    if re.search(r'^\s*$', content):
+        return True
+
+def check_IfBinaryFile(filepathname):
+    textchars = bytearray([7,8,9,10,12,13,27]) + bytearray(range(0x20, 0x7f)) + bytearray(range(0x80, 0x100))
+    is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
+
+    if is_binary_string(open(filepathname, 'rb').read(1024)):
+       return True
+    else:
+       return False
+
+def check_FileData(filename):
+    try:
+        file = open(filename, 'r')
+        lines = file.readlines()
+        for line in lines:
+            if not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
+                print (line)
+                return False
+        return True
+    except:
+        return False
+
+def get_Fileobjectsize(fobj):
+    if fobj.content_length:
+        return fobj.content_length
+
+    try:
+        pos = fobj.tell()
+        fobj.seek(0, 2)  #seek to end
+        size = fobj.tell()
+        fobj.seek(pos)  # back to original position
+        return size
+    except (AttributeError, IOError):
+        pass
+
+    # in-memory file object that doesn't support seeking or tell
+    return 0  #assume small enough
 
 @app.route('/upload', methods=['GET', 'POST'])
 # @login_required
+# @rbac.allow(['administrator'], methods=['GET', 'POST'])
 def upload():
     form = UploadForm()
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            f = form.upload.data
+    if form.validate_on_submit():
+        f = form.upload.data
+        # check if request body for form.upload.data is too large
+        if get_Fileobjectsize(f) < 1 * (1024 ** 2) and check_IfAllowedFile(f.filename):
             filename = secure_filename(f.filename)
-            f.save(filename)
-            return fileUploaded(filename)
-        # else 
-        #     flash
+            fullFileName = os.path.join(UPLOAD_FOLDER, filename)
+            f.save(fullFileName)
+            # Check if file is a binary or text file
+            if check_IfBinaryFile(fullFileName):
+                flash('File is not a csv/txt file')
+                os.remove(fullFileName)
+                return render_template('uploadDataset.html', form=form)
+            # Check if file is empty or file size is too large
+            if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
+                flash ("File is either empty or too large")
+                os.remove(fullFileName)
+            else:
+                # Check if data format in CSV/txt file follows a certain format
+                if check_FileData(fullFileName) :
+                    return insertDataset(fullFileName)
+                else:
+                    flash ("CSV File format is incorrect")
+                    os.remove(fullFileName)
+        else:
+            flash('File size is either too big or file extension is not allowed')
     return render_template('uploadDataset.html', form=form)
-
-def fileUploaded(filename):
-    #--------For testing CSRF Tokens---------------#
-    # with open(filename, 'r') as f: 
-    #     return render_template('post_example.html', text=f.read(), filename = filename)
-    
+def insertDataset(fullFileName):
     # CVS Column Names
-    col_names = ['year','schooName','degName', 'employmentRate', 'salary' , 'industry']
+    col_names = ['year','schoolName','degName','employmentRate','salary','industry']
     # Use Pandas to parse the CSV file
-    csvData = pd.read_csv(filename, names=col_names, header=None)
-    # Loop through the Rows
-    for i,row in csvData.iterrows():
-        value = (str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry'])
-        sql = '''INSERT INTO employment (year, schoolName, degName, employmentRate, salary, industry) VALUES (%s, '%s', '%s', %s, %s, '%s')'''%value
-        db.session.execute(sql, value, if_exists='append')
-        db.session.commit()
+    csvData = pd.read_csv(fullFileName, names=col_names, header=None)
     
-    
-    #     print(i,row['year'],row['schooName'],row['degName'],row['employmentRate'],row['salary'],row['industry'])
-    # with open(filename, encoding='utf-8', newline='') as csv_file:
-    #     csvreader = csv.DictReader(filename, quotechar='"')
-    #employment_row = employment(firstname='john', lastname='doe', email='jd@example.com', age=23, bio='Biology student')
-    # db.session.add(employment_row)
-    # db.session.commit()
+    # Try insert data from csv into dataset and catch if dataset cannot be inserted
+    try:
+        # Loop through the Rows
+        for i,row in csvData.iterrows():
+            newEmployement = employment(year = row['year'], 
+            schoolName = row['schoolName'], 
+            degName = row['degName'] , 
+            employmentRate = row['employmentRate'] , 
+            salary = row['salary'], 
+            industry = row['industry'])
+            db.session.add(newEmployement)   
+            db.session.commit()
+    except:
+        flash('Dataset was not fully inserted successfully, please contact the database admin for help')
+        return render_template('adminHomepage.html')
+
+    #remove file after successful data upload
+    os.remove(fullFileName)
+    db.session.close()
+    flash('Dataset Successfully uploaded')
+    return redirect(url_for('admin_HomePage'))
+
+@app.route('/adminhomepage')
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+def admin_HomePage():
+    return render_template('adminHomepage.html')
+
+
+@app.route('/download', methods=['GET'])
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+def fileDownload():
+    return render_template('downloadDataset.html')
+
+
+@app.route('/download/report/csv')
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+def download_report():
+	conn = None
+	cursor = None
+	try:
+		conn = db.connect()
+		cursor = conn.cursor(pymysql.cursors.DictCursor)
+		
+		cursor.execute("SELECT year,schooName,degName, employmentRate, salary, industry FROM employment")
+		result = cursor.fetchall()
+
+		output = io.StringIO()
+		writer = csv.writer(output)
+		
+		line = ['year,schooName,degName, employmentRate, salary, industry']
+		writer.writerow(line)
+
+		for row in result:
+			line = [str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry']]
+			writer.writerow(line)
+
+		output.seek(0)
+		
+		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
+	except Exception as e:
+		print(e)
+	finally:
+		cursor.close() 
+		conn.close()
