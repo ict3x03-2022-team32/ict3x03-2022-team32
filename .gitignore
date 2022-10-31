@@ -1,0 +1,7 @@
+#Do not track site-packages content
+
+appvenv/lib/python3.10/site-packages/*
+
+
+#Do not track env file.
+*data.env
