@@ -3,7 +3,7 @@ from os import write
 import re
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
-from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
+from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
 from application import db
 import json
@@ -11,13 +11,43 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
+from itsdangerous import URLSafeTimedSerializer
+from flask_mail import Mail, Message
+from threading import Thread
+from flask_bcrypt import Bcrypt
 
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
+mail = Mail(app)
+bcrypt = Bcrypt(app)
 
+def send_async_email(msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_email(subject, recipients, html_body):
+    msg = Message(subject, recipients=recipients)
+    msg.html = html_body
+    thr = Thread(target=send_async_email, args=[msg])
+    thr.start()
+
+def password_reset_link(user_email):
+    password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+    password_reset_url = url_for(
+        'reset_password',
+        token = password_reset_serializer.dumps(user_email, salt='password-reset-salt'),
+        _external=True)
+
+    html = render_template(
+        'send_email.html',
+        password_reset_url=password_reset_url)
+
+    send_email('Request for new password', [user_email], html)
 
 
 @app.route('/')
@@ -116,7 +146,45 @@ def login_page():
 
     return render_template('login.html', form=form)
 
+@app.route('/reset_email', methods=['GET', 'POST'])
+def reset_page():
+    form = EmailResetForm()
+    if form.validate_on_submit():
+        try:
+            user = User.query.filter_by(email_address=form.email_address.data).first_or_404()
+        except:
+            flash('Invalid email address!', category='danger')
+            return render_template('reset_email.html', form=form)
+        password_reset_link(user.email_address)
+        flash('Please check your email for a password reset link.', 'success')
+        return redirect(url_for('login_page'))
+    return render_template('reset_email.html', form=form)
 
+@app.route('/reset_email/<token>', methods=["GET", "POST"])
+def reset_password(token):
+    try:
+        password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        email_address = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=300)
+    except:
+        flash('The password reset link is invalid or has expired.', category='danger')
+        return redirect(url_for('login_page'))
+
+    form = PasswordResetForm()
+
+    if form.validate_on_submit():
+        try:
+            user = User.query.filter_by(email_address=email_address).first_or_404()
+        except:
+            flash('Invalid email address!', category='danger')
+            return redirect(url_for('login_page'))
+
+        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        db.session.add(user)
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('login_page'))
+
+    return render_template('password_reset.html',token=token, form=form)
 
 
 @app.route('/add', methods = ["POST", "GET"])

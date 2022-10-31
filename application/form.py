@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField
+from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
 from application.models import User
 
@@ -91,4 +91,11 @@ class EnrolmentDataForm(FlaskForm):
     intake = IntegerField('Intake', validators = [DataRequired()])
     enrolment = IntegerField('Enrolment', validators = [DataRequired()])
     graduates = IntegerField('Graduates', validators = [DataRequired()])
-    submit = SubmitField('Generate Data')                                         
+    submit = SubmitField('Generate Data')             
+
+class EmailResetForm(FlaskForm):
+    email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+
+class PasswordResetForm(FlaskForm):
+    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])
+                            
