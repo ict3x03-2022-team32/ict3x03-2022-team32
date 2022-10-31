@@ -1,0 +1,2 @@
+#Do not track env file.
+*data.env
