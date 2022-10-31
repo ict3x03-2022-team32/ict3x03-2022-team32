@@ -564,6 +564,7 @@ def get_Fileobjectsize(fobj):
 @app.route('/upload', methods=['GET', 'POST'])
 # @login_required
 # @rbac.allow(['administrator'], methods=['GET', 'POST'])
+# @limiter.limit("30/minute")
 def upload():
     form = UploadForm()
     if form.validate_on_submit():
@@ -611,8 +612,10 @@ def insertDataset(fullFileName):
             db.session.add(newEmployement)   
             db.session.commit()
     except:
+        #remove file after unsuccessful data upload
+        os.remove(fullFileName)
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
-        return render_template('adminHomepage.html')
+        return redirect(url_for('admin_HomePage'))
 
     #remove file after successful data upload
     os.remove(fullFileName)
@@ -629,14 +632,16 @@ def admin_HomePage():
 
 @app.route('/download', methods=['GET'])
 # @login_required
-# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+# @rbac.allow(['administrator'], methods=['GET'])
+# @limiter.limit("240/minute")
 def fileDownload():
     return render_template('downloadDataset.html')
 
 
 @app.route('/download/report/csv')
 # @login_required
-# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+# @rbac.allow(['administrator'], methods=['GET'])
+# @limiter.limit("30/minute")
 def download_report():
 	conn = None
 	cursor = None
