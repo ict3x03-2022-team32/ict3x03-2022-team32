@@ -3,12 +3,27 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from urllib.parse import quote
+from dotenv import load_dotenv
+import os
+load_dotenv('data.env')
 
+db_key = os.environ.get("db_key")
+db_username = os.environ.get("db_username")
+db_pwd = os.environ.get("db_pwd")
+email = os.environ.get("mail_email")
+pwd = os.environ.get("mail_pwd")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "JLKJJJO3IURYoiouolnojojouuoo=5y9y9youjuy952oohhbafdnoglhoho"
+app.config['SECRET_KEY'] = db_key
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenseDB.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = ('mysql+pymysql://root:%s@localhost:3306/expenseDB' % quote('P@ssw0rdpsBenU7Wka'))
+app.config['SQLALCHEMY_DATABASE_URI'] = (db_username % quote(db_pwd))
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = email
+app.config['MAIL_PASSWORD'] = pwd
+app.config['MAIL_DEFAULT_SENDER'] = email
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
