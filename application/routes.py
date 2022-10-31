@@ -153,10 +153,10 @@ def reset_page():
         try:
             user = User.query.filter_by(email_address=form.email_address.data).first_or_404()
         except:
-            flash('You have entered an invalid email address!', category='danger')
+            flash('Invalid email address!', category='danger')
             return render_template('reset_email.html', form=form)
         password_reset_link(user.email_address)
-        flash('Please check your email for the password reset link.', 'success')
+        flash('Please check your email for a password reset link.', 'success')
         return redirect(url_for('login_page'))
     return render_template('reset_email.html', form=form)
 
@@ -166,7 +166,7 @@ def reset_password(token):
         password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         email_address = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=300)
     except:
-        flash('Invalid or expired password reset link!', category='danger')
+        flash('The password reset link is invalid or has expired.', category='danger')
         return redirect(url_for('login_page'))
 
     form = PasswordResetForm()
