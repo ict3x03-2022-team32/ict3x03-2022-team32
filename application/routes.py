@@ -20,7 +20,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from werkzeug.utils import secure_filename
 import pandas as pd
 from pyparsing import *
-
+from wsgi import limiter
 
 import pymysql
 
@@ -37,6 +37,10 @@ UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
     return render_template('csrf_error.html', reason=e.description), 400
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+  return "You have exceeded your rate-limit"
 
 @app.route('/')
 @app.route('/home')
@@ -564,7 +568,7 @@ def get_Fileobjectsize(fobj):
 @app.route('/upload', methods=['GET', 'POST'])
 # @login_required
 # @rbac.allow(['administrator'], methods=['GET', 'POST'])
-# @limiter.limit("30/minute")
+@limiter.limit("30/minute")
 def upload():
     form = UploadForm()
     if form.validate_on_submit():
@@ -633,15 +637,15 @@ def admin_HomePage():
 @app.route('/download', methods=['GET'])
 # @login_required
 # @rbac.allow(['administrator'], methods=['GET'])
-# @limiter.limit("240/minute")
+@limiter.limit("240/minute")
 def fileDownload():
     return render_template('downloadDataset.html')
 
 
-@app.route('/download/report/csv')
+@app.route('/download/report/csv', methods=['GET'])
 # @login_required
 # @rbac.allow(['administrator'], methods=['GET'])
-# @limiter.limit("30/minute")
+@limiter.limit("30/minute")
 def download_report():
 	conn = None
 	cursor = None
