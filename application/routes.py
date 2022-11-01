@@ -1,4 +1,5 @@
 # from werkzeug.wrappers import request
+import requests
 from datetime import date
 from datetime import datetime
 from os import write
@@ -15,6 +16,8 @@ from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
 from functools import wraps
+from dotenv import load_dotenv
+import os
 
 import io
 from io import StringIO 
@@ -25,6 +28,15 @@ ACCESS = {
     'user': 0,
     'admin': 1
 }
+load_dotenv('data.env')
+pub_key = os.environ.get("pub_key")
+secret = os.environ.get("private_key")
+
+def is_human(catpcha_response):
+    payload = {'response': catpcha_response, 'secret': secret }
+    response = requests.post("https://www.google.com/recaptcha/api/siteverify", data=payload)
+    response_text = json.loads(response.text)
+    return response_text['success']
 
 
 ### custom wrap to determine access level ###
@@ -176,19 +188,24 @@ def industry2():
 def register_page():
     form = RegisterForm()
     if form.validate_on_submit():
-        user_to_create = User(username=form.username.data,
-                              email_address=form.email_address.data,
-                              password=form.password1.data, isadmin=0)
-        db.session.add(user_to_create)
-        db.session.commit()
-        login_user(user_to_create)
-        flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
-        return redirect(url_for('dashboard'))
-    if form.errors != {}: #If there are not errors from the validations
-        for err_msg in form.errors.values():
-            flash(f'There was an error with creating a user: {err_msg}', category='danger')
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            user_to_create = User(username=form.username.data,
+                                email_address=form.email_address.data,
+                                password=form.password1.data, isadmin=0)
+            db.session.add(user_to_create)
+            db.session.commit()
+            login_user(user_to_create)
+            flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
+        if form.errors != {}: #If there are not errors from the validations
+            for err_msg in form.errors.values():
+                flash(f'There was an error with creating a user: {err_msg}', category='danger')
 
-    return render_template('register.html', form=form)
+    return render_template('register.html', form=form, pub_key=pub_key)
 
 
 
@@ -196,18 +213,22 @@ def register_page():
 def login_page():
     form = LoginForm()
     if form.validate_on_submit():
-        attempted_user = User.query.filter_by(username=form.username.data).first()
-        if attempted_user and attempted_user.check_password_correction(
-                attempted_password=form.password.data
-        ):
-            login_user(attempted_user)
-            flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-            return redirect(url_for('dashboard'))
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            attempted_user = User.query.filter_by(username=form.username.data).first()
+            if attempted_user and attempted_user.check_password_correction(
+                    attempted_password=form.password.data
+            ):
+                login_user(attempted_user)
+                flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Username and password are not match! Please try again', category='danger')
         else:
-            flash('Username and password are not match! Please try again', category='danger')
+            flash('Please Complete Recaptcha!', category='danger')
 
-    return render_template('login.html', form=form)
-
+    return render_template('login.html', form=form, pub_key=pub_key)
 
 
 
