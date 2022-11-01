@@ -5,9 +5,12 @@ appvenv/lib/python3.10/site-packages/*
 
 #Do not track env file.
 *data.env
+<<<<<<< HEAD
 
 #Do not track pychcache changes
 application/__pycache__/*
 
 #Do not track venv cfg file
 appvenv/pyvenv.cfg
+=======
+>>>>>>> refs/remotes/origin/main
