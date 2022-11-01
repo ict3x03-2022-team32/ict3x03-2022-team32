@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+.card {
+        margin: 0 auto; /* Added */
+        float: none; /* Added */
+        margin-bottom: 10px; /* Added */
+}
+h6 {
+   width: 100%; 
+   text-align: center; 
+   border-bottom: 1px solid #000; 
+   line-height: 0.1em;
+   margin: 10px 0 20px; 
+} 
+
+h6 span { 
+    background:#fff; 
+    padding:0 10px; 
+}
+</style>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+        <div class="col-xs-10 col-sm-6  col-md-6 ">
+            <div class="card card-style shadow mb-2">
+                <div class="card-body">
+                  <form action = "" method="POST">   
+                    {{ form.csrf_token() }}
+                    <div class="text-center">
+                            <img class="mb-4" src="https://res.cloudinary.com/duyks4xux/image/upload/v1636712158/752-7524489_data-analytics-logo-png-transparent-png_xczfy2.png" alt="">
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                              {{ form.otp.label(class="form-control-label") }}
+                              {{ form.otp(class="form-control form-control-sm") }}
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-12">
+                              <!-- <input class="btn btn-block btn-secondary" type="submit" value="Submit" > -->
+                              {{ form.submit(class="btn btn-outline-info")}}                                
+                            </div>
+                        </div>       
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+{% endblock %}

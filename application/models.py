@@ -32,6 +32,8 @@ class User(db.Model, UserMixin):
     email_address = db.Column(db.String(length=50), nullable=False, unique=True)
     password_hash = db.Column(db.String(length=60), nullable=False)
     isadmin = db.Column(db.Integer)
+    istimeout = db.Column(db.Integer)
+    timeouttime = db.Column(db.DateTime)
 
     def is_admin(self):
         return self.isadmin == ACCESS['admin']

@@ -120,3 +120,7 @@ class UploadForm(FlaskForm):
         FileRequired(),
         FileAllowed(['csv', 'txt'], 'CSV and TXT only!')
     ])
+
+class OTPForm(FlaskForm):
+    otp = IntegerField(label="OTP: ")
+    submit = SubmitField("Submit OTP")

@@ -8,9 +8,9 @@ from os import write
 import re
 from xmlrpc.client import DateTime
 from application import app
-from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
+from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
-from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm
+from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -33,7 +33,7 @@ from pyparsing import *
 from application import limiter
 
 import pymysql
-
+from random import *
 import io
 from io import StringIO 
 import csv
@@ -53,6 +53,8 @@ ACCESS = {
 load_dotenv('data.env')
 pub_key = os.environ.get("pub_key")
 secret = os.environ.get("private_key")
+otp = randint(000000,999999) #6 digit otp  
+
 
 def is_human(catpcha_response):
     payload = {'response': catpcha_response, 'secret': secret }
@@ -64,6 +66,11 @@ def send_async_email(msg):
     with app.app_context():
         mail.send(msg)
 
+#email OTP function
+def sendOTP(recipient):
+    msg = Message('OTP for Login', recipients = [recipient])  
+    msg.body = str(otp)  
+    mail.send(msg)
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
@@ -269,6 +276,18 @@ def register_page():
 def login_page():
     form = LoginForm()
     if form.validate_on_submit():
+        if not session.get("attemptsLogin"):
+            session["attemptsLogin"] = 0
+        attemptsLogin = session['attemptsLogin']
+        print(session['attemptsLogin']) 
+        while attemptsLogin > 2:
+             #timeout
+            session.pop('attemptsLogin', None)
+            session["attemptsLogin"] = 0
+            timeout(form.username.data)
+            flash('EXCEEDED limit for password attempts', category='danger')
+            return render_template('login.html', form=form)
+
         recaptcha = request.form['g-recaptcha-response']
         success = is_human(recaptcha)
         if success:
@@ -276,14 +295,82 @@ def login_page():
             if attempted_user and attempted_user.check_password_correction(
                     attempted_password=form.password.data
             ):
-                login_user(attempted_user)
-                flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-                return redirect(url_for('dashboard'))
+                if attempted_user.istimeout == 1:
+                    currTime = datetime.now()
+                    diff = (currTime - attempted_user.timeouttime).total_seconds()/60 #in minutes
+                    print(diff)
+                    if diff >= 5 :
+                        #update db
+                        removeTimeout(attempted_user)
+                        session['username'] = form.username.data
+                        email = attempted_user.email_address
+                        sendOTP(email)
+
+                        return redirect('verify')  
+                    else:
+                        flash('Timed out boi', category='danger')
+                        return render_template('login.html', form=form)
+                else:
+                    session['username'] = form.username.data
+                    email = attempted_user.email_address
+                    sendOTP(email)
+                    return redirect('verify')
             else:
+                attemptsLogin = attemptsLogin+1
+                session['attemptsLogin'] = attemptsLogin
                 flash('Username and password are not match! Please try again', category='danger')
         else:
             flash('Please Complete Recaptcha!', category='danger')
     return render_template('login.html', form=form, pub_key=pub_key)
+
+@app.route('/verify', methods = ["POST", "GET"])
+def verify_page():
+    form = OTPForm()
+    if not session.get("attemptsOTP"):
+        session["attemptsOTP"] = 0
+    attemptsOTP = session['attemptsOTP']
+    print(attemptsOTP)
+    if request.method == "GET":
+        while attemptsOTP <= 2:
+            return render_template('verify.html', form=form)
+        #exceed 5 attemptsOTP (redirect to login and timeout)
+        flash('EXCEEDED limit for OTP', category='danger')
+        #timeout
+        session['attemptsOTP'] = 0 #reset back to 0 
+        username = session['username']
+        timeout(username)
+        return redirect(url_for('login_page'))
+
+    if request.method == "POST":
+        while attemptsOTP > 2:
+            #exceed 5 attemptsOTP (redirect to login and timeout)
+            flash('EXCEEDED limit for OTP', category='danger')
+            #timeout
+            session['attemptsOTP'] = 0 #reset back to 0 
+            username = session['username']
+            timeout(username)
+            return redirect(url_for('login_page'))
+        
+        user_otp = request.form['otp']
+        attemptsOTP = session['attemptsOTP']
+        if user_otp != "":
+            if otp == int(user_otp):
+                attemptsOTP = attemptsOTP+1
+                session['attemptsOTP'] = 0 #might need reset to 0 if success.
+                username = session['username']
+                attempted_user = User.query.filter_by(username=username).first()
+                login_user(attempted_user)
+                flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                return redirect(url_for('dashboard'))
+            else:
+                attemptsOTP = attemptsOTP+1
+                session['attemptsOTP'] = attemptsOTP
+                flash('Invalid OTP! Please try again', category='danger')
+                return render_template('verify.html', form=form)
+        else:
+            flash("Please enter OTP!", category='danger' )
+            return render_template('verify.html', form=form)
+
 
 @app.route('/reset_email', methods=['GET', 'POST'])
 def reset_page():
@@ -839,4 +926,49 @@ def insertDataset(fullFileName):
     return redirect(url_for('control_panel'))
 
 
+
+@app.route('/download/report/csv', methods=['GET'])
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET'])
+@limiter.limit("30/minute")
+def download_report():
+	conn = None
+	cursor = None
+	try:
+		conn = db.connect()
+		cursor = conn.cursor(pymysql.cursors.DictCursor)
+		
+		cursor.execute("SELECT year,schooName,degName, employmentRate, salary, industry FROM employment")
+		result = cursor.fetchall()
+
+		output = io.StringIO()
+		writer = csv.writer(output)
+		
+		line = ['year,schooName,degName, employmentRate, salary, industry']
+		writer.writerow(line)
+
+		for row in result:
+			line = [str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry']]
+			writer.writerow(line)
+
+		output.seek(0)
+		#app.logger.warning('%s downloaded a copy of the data from the database', current_user.username)
+		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
+	except Exception as e:
+		print(e)
+	finally:
+		cursor.close() 
+		conn.close()
+
+#timeout function 
+def timeout(username):
+    user = User.query.filter_by(username=username).first()
+    user.istimeout = 1
+    user.timeouttime = datetime.now()
+    db.session.commit()
+
+def removeTimeout(attempted_user):
+    attempted_user.istimeout = 0
+    attempted_user.timeouttime = None
+    db.session.commit()
 
