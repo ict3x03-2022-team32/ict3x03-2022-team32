@@ -20,7 +20,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from werkzeug.utils import secure_filename
 import pandas as pd
 from pyparsing import *
-from wsgi import limiter
+from application import limiter
 
 import pymysql
 
@@ -517,7 +517,7 @@ def dashboard():
                             industry_graduates_label = json.dumps(industry_graduates_label)
     )
 
-#------------------------Upload CSV file function (to upload dataset into database)------------------------------------
+#------------------------Upload CSV file function (to upload dataset into database)------------------------------------#
 
 def check_IfAllowedFile(filename):
     return '.' in filename and \
@@ -572,12 +572,10 @@ def upload():
 
     form = UploadForm()
 
-
     if form.validate_on_submit():
-
-
         f = form.upload.data
-        # check if request body for form.upload.data is too large
+        #app.logger.warning('%s attempted to upload a file ', current_user.username)
+        # Check if request body for form.upload.data is too large
         if get_Fileobjectsize(f) < 1 * (1024 ** 2) and check_IfAllowedFile(f.filename):
             filename = secure_filename(f.filename)
             fullFileName = os.path.join(UPLOAD_FOLDER, filename)
@@ -585,13 +583,13 @@ def upload():
             # Check if file is a binary or text file
             if check_IfBinaryFile(fullFileName):
                 flash('File is not a csv/txt file')
+                #app.logger.warning('%s uploaded a binary file and not a file containing text data', current_user.username)
                 os.remove(fullFileName)
-                #app.logger.warning('%s uploaded a binary file and not a text file ', user.username)
                 return render_template('uploadDataset.html', form=form)
             # Check if file is empty or file size is too large
             if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
                 flash ("File is either empty or too large")
-                #app.logger.warning('%s uploaded a binary file and not a text file ', user.username)
+                #app.logger.warning('%s uploaded a file that is either empty or too large', current_user.username)
                 os.remove(fullFileName)
             else:
                 # Check if data format in CSV/txt file follows a certain format
@@ -599,9 +597,10 @@ def upload():
                     return insertDataset(fullFileName)
                 else:
                     flash ("CSV File format is incorrect")
+                    #app.logger.warning('%s uploaded a file that does not follow dataset format', current_user.username)
                     os.remove(fullFileName)
         else:
-            #app.logger.warning('%s uploaded a file whose size is either too big or file whoseextension is not allowed', user.username)
+            #app.logger.warning('%s uploaded a file whose size is either too big or file whose extension is not allowed', current_user.username)
             flash('File size is either too big or file extension is not allowed')
     return render_template('uploadDataset.html', form=form)
 def insertDataset(fullFileName):
@@ -623,14 +622,16 @@ def insertDataset(fullFileName):
             db.session.add(newEmployement)   
             db.session.commit()
     except:
-        #remove file after unsuccessful data upload
+        # Remove file after unsuccessful data upload
         os.remove(fullFileName)
+        #app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
         return redirect(url_for('admin_HomePage'))
-
-    #remove file after successful data upload
-    os.remove(fullFileName)
+    
     db.session.close()
+    # Remove file after successful data upload
+    os.remove(fullFileName)
+    #app.logger.warning('%s successfully uploaded dataset into database', current_user.username)
     flash('Dataset Successfully uploaded')
     return redirect(url_for('admin_HomePage'))
 
@@ -674,7 +675,7 @@ def download_report():
 			writer.writerow(line)
 
 		output.seek(0)
-		
+		#app.logger.warning('%s downloaded a copy of the data from the database', current_user.username)
 		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
 	except Exception as e:
 		print(e)
