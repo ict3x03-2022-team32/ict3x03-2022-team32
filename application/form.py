@@ -1,3 +1,4 @@
+from xmlrpc.client import DateTime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
@@ -17,6 +18,8 @@ class UserDetailForm(FlaskForm):
     username = StringField('Username: ', validators=[DataRequired()])
     email = StringField('Email: ', validators=[DataRequired(), Email()])
     isadmin = IntegerField('Access: ')
+    istimeout = IntegerField('Timed out')
+    timeoutTime = DateTime("Time out Date")
 
 class Form(FlaskForm):
     # state = SelectField('state', choices=[('CA','California'), ('NV', 'Nevada')])

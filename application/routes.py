@@ -134,6 +134,8 @@ def user_detail(user_id):
     form.email.data = user.email_address
     form.username.data = user.username
     form.isadmin.data = user.isadmin
+    form.istimeout.data = user.istimeout
+    form.timeoutTime.data = user.timeouttime
     return render_template('user_detail.html', form=form, pageTitle='User Details')
 
 # update user
