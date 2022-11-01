@@ -1,10 +1,14 @@
 # from werkzeug.wrappers import request
+import requests
+from datetime import date
+from datetime import datetime
 from os import write
 import re
+from xmlrpc.client import DateTime
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
-from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm
-from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
+from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm
+from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -15,6 +19,9 @@ from itsdangerous import URLSafeTimedSerializer
 from flask_mail import Mail, Message
 from threading import Thread
 from flask_bcrypt import Bcrypt
+from functools import wraps
+from dotenv import load_dotenv
+import os
 
 import io
 from io import StringIO 
@@ -23,6 +30,19 @@ from csv import writer
 
 mail = Mail(app)
 bcrypt = Bcrypt(app)
+ACCESS = {
+    'user': 0,
+    'admin': 1
+}
+load_dotenv('data.env')
+pub_key = os.environ.get("pub_key")
+secret = os.environ.get("private_key")
+
+def is_human(catpcha_response):
+    payload = {'response': catpcha_response, 'secret': secret }
+    response = requests.post("https://www.google.com/recaptcha/api/siteverify", data=payload)
+    response_text = json.loads(response.text)
+    return response_text['success']
 
 def send_async_email(msg):
     with app.app_context():
@@ -49,6 +69,90 @@ def password_reset_link(user_email):
 
     send_email('Request for new password', [user_email], html)
 
+### custom wrap to determine access level ###
+def requires_access_level(access_level):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated: #the user is not logged in
+                return redirect(url_for('login'))
+
+            #user = User.query.filter_by(id=current_user.id).first()
+
+            if not current_user.allowed(access_level):
+                flash('You do not have access to this resource.', 'danger')
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+    ################ ADMIN ACCESS FUNCTIONALITY ###################
+
+# control panel
+@app.route('/control_panel')
+@requires_access_level(ACCESS['admin'])
+def control_panel():
+    all_users = User.query.all()
+    return render_template('control_panel.html', users=all_users, pageTitle='My Flask App Control Panel')
+
+
+# user details & update
+@app.route('/user_detail/<int:user_id>', methods=['GET','POST'])
+@requires_access_level(ACCESS['admin'])
+def user_detail(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+    form.id.data = user.id
+    # form.name.data = user.name
+    form.email.data = user.email_address
+    form.username.data = user.username
+    form.isadmin.data = user.isadmin
+    return render_template('user_detail.html', form=form, pageTitle='User Details')
+
+# update user
+@app.route('/update_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+
+    orig_user = user.username # get user details stored in the database - save username into a variable
+
+    if form.validate_on_submit():
+        user.email_address = form.email.data
+
+        new_user = form.username.data
+
+        if new_user != orig_user: # if the form data is not the same as the original username
+            valid_user = User.query.filter_by(username=new_user).first() # query the database for the usernam
+            if valid_user is not None:
+                flash("That username is already taken...", 'danger')
+                return redirect(url_for('control_panel'))
+
+        # if the values are the same, we can move on.
+        user.username = form.username.data
+        user.isadmin = request.form['access_lvl']
+        db.session.commit()
+        flash('The user has been updated.', 'success')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+# delete user
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def delete_user(user_id):
+    if request.method == 'POST': #if it's a POST request, delete the friend from the database
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        flash('User has been deleted.', 'success')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+
+    ################ USER ACCESS FUNCTIONALITY ###################
 
 @app.route('/')
 @app.route('/home')
@@ -114,19 +218,24 @@ def industry2():
 def register_page():
     form = RegisterForm()
     if form.validate_on_submit():
-        user_to_create = User(username=form.username.data,
-                              email_address=form.email_address.data,
-                              password=form.password1.data)
-        db.session.add(user_to_create)
-        db.session.commit()
-        login_user(user_to_create)
-        flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
-        return redirect(url_for('dashboard'))
-    if form.errors != {}: #If there are not errors from the validations
-        for err_msg in form.errors.values():
-            flash(f'There was an error with creating a user: {err_msg}', category='danger')
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            user_to_create = User(username=form.username.data,
+                                email_address=form.email_address.data,
+                                password=form.password1.data, isadmin=0)
+            db.session.add(user_to_create)
+            db.session.commit()
+            login_user(user_to_create)
+            flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
+        if form.errors != {}: #If there are not errors from the validations
+            for err_msg in form.errors.values():
+                flash(f'There was an error with creating a user: {err_msg}', category='danger')
 
-    return render_template('register.html', form=form)
+    return render_template('register.html', form=form, pub_key=pub_key)
 
 
 
@@ -134,17 +243,21 @@ def register_page():
 def login_page():
     form = LoginForm()
     if form.validate_on_submit():
-        attempted_user = User.query.filter_by(username=form.username.data).first()
-        if attempted_user and attempted_user.check_password_correction(
-                attempted_password=form.password.data
-        ):
-            login_user(attempted_user)
-            flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-            return redirect(url_for('dashboard'))
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            attempted_user = User.query.filter_by(username=form.username.data).first()
+            if attempted_user and attempted_user.check_password_correction(
+                    attempted_password=form.password.data
+            ):
+                login_user(attempted_user)
+                flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Username and password are not match! Please try again', category='danger')
         else:
-            flash('Username and password are not match! Please try again', category='danger')
-
-    return render_template('login.html', form=form)
+            flash('Please Complete Recaptcha!', category='danger')
+    return render_template('login.html', form=form, pub_key=pub_key)
 
 @app.route('/reset_email', methods=['GET', 'POST'])
 def reset_page():
@@ -374,9 +487,22 @@ def logout_page():
 
 #------------------------Dash board Functions (Use SQL queries to retreive and analyse data )------------------------------------
 
-@app.route('/dashboard')
+@app.route('/dashboard' , methods = ["POST", "GET"])
 @login_required
 def dashboard():
+    form = MessageDataForm()
+    
+    entries = comments.query.filter_by()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            comment = request.form['comments']
+            new_date = datetime.now()
+            cname = current_user.username
+            entry = comments(comment,new_date,cname)
+            db.session.add(entry)
+            db.session.commit()
+            flash(f"Comment Added", "success")
+            return redirect(url_for('dashboard'))
     #Pie chart: Industry vacancy in latest year
     #MAX year
     #SELECT MAX(year) FROM industry
@@ -560,5 +686,8 @@ def dashboard():
                             unienrolment_arts_intake = json.dumps(unienrolment_arts_intake),
                             unienrolment_arts_enrolment = json.dumps(unienrolment_arts_enrolment),
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
-                            industry_graduates_label = json.dumps(industry_graduates_label)
+                            industry_graduates_label = json.dumps(industry_graduates_label),
+                            form=form,
+                            entries = entries
     )
+
