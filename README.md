@@ -3,7 +3,7 @@ Data Analytics Website for Employees in Industries of Singapore
 
 To run, For linux:
 ```
-python3 -m venv env
+python3 -m venv appvenv
 source appvenv/bin/activate
 pip install -r requirements.txt
 python3 wsgi.py
@@ -13,7 +13,7 @@ To run, For Windows:
 ```
 For windows:
 python -m venv env
-appvenv\Scripts\activate
+env\Scripts\activate
 pip install -r requirements.txt
 python3 wsgi.py
 ```
