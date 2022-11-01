@@ -5,7 +5,10 @@
       <section>
          <h6 class="display-4 font-weight-normal">Dataset File Upload </h6>
       </section>
-      
+      <section>
+         <p>Dataset of 1 Megabyte in size is allowed to be uploaded</p>
+         <p>Dataset uploaded must only be in TXT/CSV format and must follow a strict format</p>
+      </section>
       <section>
          <form action = "{{ url_for('.upload') }}" method = "POST" enctype = "multipart/form-data">
             <br>
