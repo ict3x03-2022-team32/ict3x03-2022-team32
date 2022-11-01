@@ -300,7 +300,7 @@ def login_page():
                         #update db
                         removeTimeout(attempted_user)
                         session['username'] = form.username.data
-                        email = "suhailizxc@gmail.com"  #update to user email 
+                        email = attempted_user.email_address
                         sendOTP(email)
 
                         return redirect('verify')  
@@ -309,7 +309,7 @@ def login_page():
                         return render_template('login.html', form=form)
                 else:
                     session['username'] = form.username.data
-                    email = "suhailizxc@gmail.com"
+                    email = attempted_user.email_address
                     sendOTP(email)
                     return redirect('verify')
             else:
