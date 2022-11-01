@@ -543,7 +543,6 @@ def check_FileData(filename):
         lines = file.readlines()
         for line in lines:
             if not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
-                print (line)
                 return False
         return True
     except:
@@ -570,8 +569,13 @@ def get_Fileobjectsize(fobj):
 # @rbac.allow(['administrator'], methods=['GET', 'POST'])
 @limiter.limit("30/minute")
 def upload():
+
     form = UploadForm()
+
+
     if form.validate_on_submit():
+
+
         f = form.upload.data
         # check if request body for form.upload.data is too large
         if get_Fileobjectsize(f) < 1 * (1024 ** 2) and check_IfAllowedFile(f.filename):
@@ -582,10 +586,12 @@ def upload():
             if check_IfBinaryFile(fullFileName):
                 flash('File is not a csv/txt file')
                 os.remove(fullFileName)
+                #app.logger.warning('%s uploaded a binary file and not a text file ', user.username)
                 return render_template('uploadDataset.html', form=form)
             # Check if file is empty or file size is too large
             if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
                 flash ("File is either empty or too large")
+                #app.logger.warning('%s uploaded a binary file and not a text file ', user.username)
                 os.remove(fullFileName)
             else:
                 # Check if data format in CSV/txt file follows a certain format
@@ -595,6 +601,7 @@ def upload():
                     flash ("CSV File format is incorrect")
                     os.remove(fullFileName)
         else:
+            #app.logger.warning('%s uploaded a file whose size is either too big or file whoseextension is not allowed', user.username)
             flash('File size is either too big or file extension is not allowed')
     return render_template('uploadDataset.html', form=form)
 def insertDataset(fullFileName):
