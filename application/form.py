@@ -3,6 +3,8 @@ from wtforms import StringField, SelectField, SubmitField, IntegerField, Passwor
 from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
 from application.models import User
 
+#For my (YX) file upload
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
     username = StringField(label='User Name:', validators=[DataRequired()])
@@ -111,5 +113,10 @@ class EmailResetForm(FlaskForm):
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
 
 class PasswordResetForm(FlaskForm):
-    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])
-                            
+    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])                                        
+
+class UploadForm(FlaskForm):
+        upload = FileField('CSV and TXT only!', validators=[
+        FileRequired(),
+        FileAllowed(['csv', 'txt'], 'CSV and TXT only!')
+    ])
