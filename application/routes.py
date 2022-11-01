@@ -195,6 +195,7 @@ def index():
 
 @app.route('/employment' , methods=['GET', 'POST'])
 @login_required
+@limiter.limit("240/minute")
 def employments():
     form = Form()
     form.degName.choices =  [(degree.degName) for degree in Degree.query.order_by(Degree.degId).all() ]
@@ -458,6 +459,7 @@ def delete3(entry_id):
 
 @app.route('/download/report/csv')
 @login_required
+@limiter.limit("30/minute")
 def download():
     def without_keys(d, keys):
         return {x: d[x] for x in d if x not in keys}
@@ -481,6 +483,7 @@ def download():
 
 
 @app.route('/download1/report/csv')
+@limiter.limit("30/minute")
 @login_required
 def download1():
     def without_keys(d, keys):
@@ -823,59 +826,14 @@ def insertDataset(fullFileName):
         os.remove(fullFileName)
         #app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
-        return redirect(url_for('admin_HomePage'))
+        return redirect(url_for('control_panel'))
     
     db.session.close()
     # Remove file after successful data upload
     os.remove(fullFileName)
     #app.logger.warning('%s successfully uploaded dataset into database', current_user.username)
     flash('Dataset Successfully uploaded')
-    return redirect(url_for('admin_HomePage'))
-
-@app.route('/adminhomepage')
-# @login_required
-# @rbac.allow(['administrator'], methods=['GET', 'POST'])
-def admin_HomePage():
-    return render_template('adminHomepage.html')
+    return redirect(url_for('control_panel'))
 
 
-@app.route('/download', methods=['GET'])
-# @login_required
-# @rbac.allow(['administrator'], methods=['GET'])
-@limiter.limit("240/minute")
-def fileDownload():
-    return render_template('downloadDataset.html')
 
-
-@app.route('/download/report/csv', methods=['GET'])
-# @login_required
-# @rbac.allow(['administrator'], methods=['GET'])
-@limiter.limit("30/minute")
-def download_report():
-	conn = None
-	cursor = None
-	try:
-		conn = db.connect()
-		cursor = conn.cursor(pymysql.cursors.DictCursor)
-		
-		cursor.execute("SELECT year,schooName,degName, employmentRate, salary, industry FROM employment")
-		result = cursor.fetchall()
-
-		output = io.StringIO()
-		writer = csv.writer(output)
-		
-		line = ['year,schooName,degName, employmentRate, salary, industry']
-		writer.writerow(line)
-
-		for row in result:
-			line = [str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry']]
-			writer.writerow(line)
-
-		output.seek(0)
-		#app.logger.warning('%s downloaded a copy of the data from the database', current_user.username)
-		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
-	except Exception as e:
-		print(e)
-	finally:
-		cursor.close() 
-		conn.close()
