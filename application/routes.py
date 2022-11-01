@@ -194,6 +194,7 @@ def index():
     return render_template('index.html', entries = entries, form=form)
 
 @app.route('/employment' , methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 @login_required
 @limiter.limit("240/minute")
 def employments():
@@ -217,6 +218,7 @@ def employments():
 
 
 @app.route('/industry' , methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 @login_required
 def industry2():
     form = Form()
@@ -765,6 +767,7 @@ def get_Fileobjectsize(fobj):
     return 0  #assume small enough
 
 @app.route('/upload', methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 # @login_required
 # @rbac.allow(['administrator'], methods=['GET', 'POST'])
 @limiter.limit("30/minute")
