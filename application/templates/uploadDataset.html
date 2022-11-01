@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+{% block content %}
+<html>
+   <body>
+      <section>
+         <h6 class="display-4 font-weight-normal">Dataset File Upload </h6>
+      </section>
+      
+      <section>
+         <form action = "{{ url_for('.upload') }}" method = "POST" enctype = "multipart/form-data">
+            <br>
+            {{form.csrf_token}}
+            <br>
+            {{form.upload.label}}
+            <br>
+            {{form.upload}}
+            <!--some code display flash msg-->
+            <button type="submit">Submit</button>
+         </form>
+      </section>
+
+      {% with messages = get_flashed_messages() %}  
+      {% if messages %}  
+            {% for message in messages %}  
+                 <p>{{ message }}</p>  
+            {% endfor %}  
+      {% endif %}  
+   {% endwith %}  
+
+   </body>
+</html>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="col-sm-10 ml-auto mr-auto ">
+  <h1>Admin Control Panel</h1>
+
+  <div>
+
+    {% if users %}
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                
+                <th>Username</th>
+                <th>E-mail</th>
+                <th>Access Level</th>
+                <th>User Details</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in users %}
+            <tr>
+                
+                <td> {{ row.username }}</td>
+                <td> {{ row.email_address }}</td>
+                <td> 
+                  {% if row.isadmin == 0 %} User
+                  {% elif row.isadmin == 1 %} Admin
+                  {% else %} --
+                  {% endif %}
+
+                </td>
+                <td>
+                  <form action="{{url_for('user_detail', user_id=row.id)}}" method="POST">
+                    <input type="submit" value="Details" class="btn btn-outline-primary btn-sm" />
+                </form>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+  </div>
+</div>
+{% endblock %}

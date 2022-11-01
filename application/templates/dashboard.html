@@ -97,6 +97,50 @@
         </div>
     </div>
 </div>
+<!-- COMMENT SECTION -->
+<div class="container">
+    <div class="w-100 mb-3">
+        <h4>Comment Section</H4>
+        {% for entries in entries %}
+        <div class='message'>
+            <h4>{{entries['cname'] }}</h4>
+            <p>{{entries['comment'] }}</p>
+            <p>{{entries['datetime']}}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col-xs-10 col-sm-6 col-md-6">
+        <div class="card card-style mb-2">
+            <div class="card-body">
+                <form action="" method="POST">
+                    {{ form.csrf_token() }}
+                    <fieldset class="form-group">
+                        <legend class="mb-4">Post a comment!</legend>
+                        <!-- Comments -->
+                        <div class="form-group">
+                            {{ form.comments.label(class = "form-control-label") }}
+                            {{ form.comments(class = "form-control form-control-sm") }}
+                        </div>
+    
+                        <!-- Submit Button -->
+                        <div class="form-group border-bottom pb-3">
+                            {{ form.submit(class="btn btn-outline-info")}}
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+</div>
+
+
+
+
 
 {% block javascript %}
 <script>

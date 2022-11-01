@@ -1,13 +1,22 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField
+from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
 from application.models import User
 
+#For my (YX) file upload
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
     username = StringField(label='User Name:', validators=[DataRequired()])
     password = PasswordField(label='Password:', validators=[DataRequired()])
     submit = SubmitField(label='Sign in')
+
+
+class UserDetailForm(FlaskForm):
+    id = IntegerField('Id: ')
+    username = StringField('Username: ', validators=[DataRequired()])
+    email = StringField('Email: ', validators=[DataRequired(), Email()])
+    isadmin = IntegerField('Access: ')
 
 class Form(FlaskForm):
     # state = SelectField('state', choices=[('CA','California'), ('NV', 'Nevada')])
@@ -16,6 +25,11 @@ class Form(FlaskForm):
     industry = SelectField('industry',choices=[])
     year = SelectField('year',choices=[])
     colour = SelectField('colour',choices=[])
+
+class MessageDataForm(FlaskForm):
+    comments = StringField(label='Comments: ', validators=[DataRequired()])
+    submit = SubmitField('Post Comment')
+
 
 
 class RegisterForm(FlaskForm):
@@ -33,6 +47,7 @@ class RegisterForm(FlaskForm):
     email_address = StringField(label='Email Address:', validators=[Email(), DataRequired()])
     password1 = PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'), DataRequired()])
+    isadmin = IntegerField(label="Access :")
     submit = SubmitField(label='Create Account')
     
 
@@ -49,6 +64,7 @@ class UserDataForm(FlaskForm):
                             )
     amount = IntegerField('Amount', validators = [DataRequired()])                                   
     submit = SubmitField('Generate Report')
+
 
 
 class EmploymentDataForm(FlaskForm):
@@ -91,4 +107,20 @@ class EnrolmentDataForm(FlaskForm):
     intake = IntegerField('Intake', validators = [DataRequired()])
     enrolment = IntegerField('Enrolment', validators = [DataRequired()])
     graduates = IntegerField('Graduates', validators = [DataRequired()])
-    submit = SubmitField('Generate Data')                                         
+    submit = SubmitField('Generate Data')             
+
+class EmailResetForm(FlaskForm):
+    email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+
+class PasswordResetForm(FlaskForm):
+    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])                                        
+
+class UploadForm(FlaskForm):
+        upload = FileField('CSV and TXT only!', validators=[
+        FileRequired(),
+        FileAllowed(['csv', 'txt'], 'CSV and TXT only!')
+    ])
+
+class OTPForm(FlaskForm):
+    otp = IntegerField(label="OTP: ")
+    submit = SubmitField("Submit OTP")
