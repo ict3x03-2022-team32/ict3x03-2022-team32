@@ -114,7 +114,7 @@ body {
                                 {% if current_user.is_admin() %}
                                 <a class="nav-item nav-link" href="{{ url_for('employments') }}">Salary</a>
                                 <a class="nav-item nav-link" href="{{ url_for('industry2') }}">Industry</a>
-                                <a class="nav-item nav-link" href="{{ url_for('industry2') }}">Upload Salary</a>
+                                <a class="nav-item nav-link" href="{{ url_for('upload') }}">Upload CSV</a>
                                 <a class="nav-item nav-link" href="{{ url_for('control_panel')}}">Admin Control Panel</a>
                                 {% endif %}
                                 <a class="nav-link" href="{{ url_for('logout_page') }}">Logout</a>
