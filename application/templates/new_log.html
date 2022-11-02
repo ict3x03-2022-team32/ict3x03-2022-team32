@@ -1,0 +1,51 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Logs page
+{% endblock %}
+{% block content %}
+<style>
+ .table-responsive{
+    width: 100%;
+    margin-bottom: 50px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    text-align: center;
+}    
+th{
+    text-align: center;
+    border: 2px solid white;
+    background-color: black;
+    color: white;
+    height: 50px;
+
+}
+td{
+    text-align: center;
+    border: 2px solid rgb(0, 0, 0);
+}
+.audit{
+    text-align: center;
+    margin-right: 65px;
+    font-weight: bold;
+}
+</style>
+
+<html lang="en">
+    <head>
+        <title> Audit logs </title>              
+    </head>
+    <body>
+        <div class="audit">
+            <h1>
+                Audit Logs
+            </h1>
+            <input type="button" value="Audit" onclick='myfunction();'>
+        </div>
+        <div class="table-responsive">
+        </div>
+    </body>
+</html>
+{% endblock %}
