@@ -53,7 +53,6 @@ ACCESS = {
 load_dotenv('data.env')
 pub_key = os.environ.get("pub_key")
 secret = os.environ.get("private_key")
-otp = randint(000000,999999) #6 digit otp  
 
 
 def is_human(catpcha_response):
@@ -67,7 +66,7 @@ def send_async_email(msg):
         mail.send(msg)
 
 #email OTP function
-def sendOTP(recipient):
+def sendOTP(recipient, otp):
     msg = Message('OTP for Login', recipients = [recipient])  
     msg.body = str(otp)  
     mail.send(msg)
@@ -258,7 +257,7 @@ def register_page():
         if success:
             user_to_create = User(username=form.username.data,
                                 email_address=form.email_address.data,
-                                password=form.password1.data, isadmin=0)
+                                password=form.password1.data, isadmin=0, istimeout=0)
             db.session.add(user_to_create)
             db.session.commit()
             login_user(user_to_create)
@@ -282,8 +281,8 @@ def login_page():
             session["attemptsLogin"] = 0
         attemptsLogin = session['attemptsLogin']
         print(session['attemptsLogin']) 
-        while attemptsLogin > 2:
-             #timeout
+        while attemptsLogin > 10:
+             #timeout if fail more than 10 attempts
             session.pop('attemptsLogin', None)
             session["attemptsLogin"] = 0
             timeout(form.username.data)
@@ -305,17 +304,20 @@ def login_page():
                         #update db
                         removeTimeout(attempted_user)
                         session['username'] = form.username.data
+                        otp = randint(000000,999999)
+                        session['otp'] = otp
                         email = attempted_user.email_address
-                        sendOTP(email)
-
+                        sendOTP(email, otp)
                         return redirect('verify')  
                     else:
                         flash('Timed out boi', category='danger')
                         return render_template('login.html', form=form)
                 else:
                     session['username'] = form.username.data
+                    otp = randint(000000,999999) #6 digit otp
+                    session['otp'] = otp 
                     email = attempted_user.email_address
-                    sendOTP(email)
+                    sendOTP(email, otp)
                     return redirect('verify')
             else:
                 attemptsLogin = attemptsLogin+1
@@ -333,7 +335,7 @@ def verify_page():
     attemptsOTP = session['attemptsOTP']
     print(attemptsOTP)
     if request.method == "GET":
-        while attemptsOTP <= 2:
+        while attemptsOTP <= 5:
             return render_template('verify.html', form=form)
         #exceed 5 attemptsOTP (redirect to login and timeout)
         flash('EXCEEDED limit for OTP', category='danger')
@@ -344,7 +346,7 @@ def verify_page():
         return redirect(url_for('login_page'))
 
     if request.method == "POST":
-        while attemptsOTP > 2:
+        while attemptsOTP > 5:
             #exceed 5 attemptsOTP (redirect to login and timeout)
             flash('EXCEEDED limit for OTP', category='danger')
             #timeout
@@ -356,7 +358,7 @@ def verify_page():
         user_otp = request.form['otp']
         attemptsOTP = session['attemptsOTP']
         if user_otp != "":
-            if otp == int(user_otp):
+            if session['otp'] == int(user_otp):
                 attemptsOTP = attemptsOTP+1
                 session['attemptsOTP'] = 0 #might need reset to 0 if success.
                 username = session['username']
