@@ -1,6 +1,7 @@
 from msilib import type_string, type_valid
 from application.models import User, employment, industry, unienrolment
 
+'''
 def test_new_user():
     """
     GIVEN a User model
@@ -13,7 +14,7 @@ def test_new_user():
     assert user.username == "testing"
     assert user.email_address == "testing@test.com"
     assert user.password_hash != "123abcTEST"
-
+'''
 
 def test_new_employment():
     """

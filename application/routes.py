@@ -291,7 +291,7 @@ def login_page():
             return render_template('login.html', form=form)
 
         recaptcha = request.form['g-recaptcha-response']
-        # success = is_human(recaptcha)
+        #success = is_human(recaptcha)
         success = True #bypass recaptcha
         if success:
             attempted_user = User.query.filter_by(username=form.username.data).first()
