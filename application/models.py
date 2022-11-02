@@ -40,6 +40,15 @@ class User(db.Model, UserMixin):
     def check_password_correction(self, attempted_password):
         return bcrypt.check_password_hash(self.password_hash, attempted_password)
 
+    def __init__ (self, _id: int, _username: str, _email_address: str, password_plaintext: str):
+        """
+        To create an object and be use for unit testing
+        """
+        self.id = _id
+        self.username = _username
+        self.email_address = _email_address
+        self.password_hash = bcrypt.generate_password_hash(password_plaintext).decode('utf-8')
+
 
 
 
