@@ -329,7 +329,7 @@ def login_page():
                 flash('Username and password are not match! Please try again', category='danger')
         else:
             flash('Please Complete Recaptcha!', category='danger')
-    return render_template('login.html', form=form, pub_key=pub_key)
+        return render_template('login.html', form=form, pub_key=pub_key)
         attempted_user = User.query.filter_by(username=form.username.data).first()
         if attempted_user and attempted_user.check_password_correction(
                 attempted_password=form.password.data
