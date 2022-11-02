@@ -41,7 +41,7 @@ from io import StringIO
 import csv
 from csv import writer
 
-ALLOWED_EXTENSIONS = {'txt', 'csv'}
+ALLOWED_EXTENSIONS = {'csv'}
 script_dir = os.path.dirname(__file__)
 rel_path = "..\\tempFileUploadDir\\"
 UPLOAD_FOLDER = os.path.join(script_dir, rel_path)

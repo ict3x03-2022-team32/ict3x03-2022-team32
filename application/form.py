@@ -109,9 +109,9 @@ class PasswordResetForm(FlaskForm):
     submit = SubmitField(label="Submit Password")                                    
 
 class UploadForm(FlaskForm):
-        upload = FileField('CSV and TXT only!', validators=[
+        upload = FileField('CSV only!', validators=[
         FileRequired(),
-        FileAllowed(['csv', 'txt'], 'CSV and TXT only!')
+        FileAllowed(['csv'], 'CSV only!')
     ])
 
 class OTPForm(FlaskForm):
