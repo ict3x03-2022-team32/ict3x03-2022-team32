@@ -98,19 +98,7 @@ class IndustryDataForm(FlaskForm):
     year = SelectField('Year', validators=[DataRequired()],choices=['2015', '2016','2017', '2018','2019'])
     submit = SubmitField('Generate Data')
 
-# class EnrolmentDataForm(FlaskForm):
-#     industryName = SelectField("Industry", validators=[DataRequired()],
-#                                             choices =['ICT', 'Healthcare',
-#                                             'Engineering', 'Business',
-#                                             'Arts'
-#                                             ]
-#                             )
-    
-#     year = SelectField('Year', validators=[DataRequired()],choices=['2015', '2016','2017', '2018','2019'])
-#     intake = IntegerField('Intake', validators = [DataRequired()])
-#     enrolment = IntegerField('Enrolment', validators = [DataRequired()])
-#     graduates = IntegerField('Graduates', validators = [DataRequired()])
-#     submit = SubmitField('Generate Data')             
+         
 
 class EmailResetForm(FlaskForm):
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
