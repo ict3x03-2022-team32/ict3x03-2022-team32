@@ -290,7 +290,8 @@ def login_page():
             return render_template('login.html', form=form)
 
         recaptcha = request.form['g-recaptcha-response']
-        success = is_human(recaptcha)
+        # success = is_human(recaptcha)
+        success = True #bypass recaptcha
         if success:
             attempted_user = User.query.filter_by(username=form.username.data).first()
             if attempted_user and attempted_user.check_password_correction(
@@ -308,7 +309,10 @@ def login_page():
                         session['otp'] = otp
                         email = attempted_user.email_address
                         sendOTP(email, otp)
-                        return redirect('verify')  
+                        # return redirect('verify')(bypass otp)
+                        login_user(attempted_user)
+                        flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                        return redirect(url_for('dashboard'))  
                     else:
                         flash('Your account is being timed out', category='danger')
                         return render_template('login.html', form=form)
@@ -318,7 +322,10 @@ def login_page():
                     session['otp'] = otp 
                     email = attempted_user.email_address
                     sendOTP(email, otp)
-                    return redirect('verify')
+                    # return redirect('verify') (bypass otp)
+                    login_user(attempted_user)
+                    flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                    return redirect(url_for('dashboard'))
             else:
                 attemptsLogin = attemptsLogin+1
                 session['attemptsLogin'] = attemptsLogin
