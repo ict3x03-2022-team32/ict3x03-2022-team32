@@ -114,6 +114,7 @@ class IndustryDataForm(FlaskForm):
 
 class EmailResetForm(FlaskForm):
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+    submit = SubmitField(label="Submit")
 
 class PasswordResetForm(FlaskForm):
     password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])                                        

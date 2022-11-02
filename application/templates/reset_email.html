@@ -10,6 +10,9 @@
         margin-bottom: 10px; /* Added */
     }
 </style>
+<head>
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+</head>
 <body>
     <div class="container">
         <div class="row justify-content-center">
@@ -19,12 +22,18 @@
                     <div class="aa">
                         <h3>Enter your Email Address: </h3>
                     </div>
+                    
                     <form action="{{url_for('reset_page')}}" method="POST">
                         {{ form.csrf_token }}
                         <dl>
                             {{ form.email_address(class="form-control", placeholder="Email Address") }}
                         </dl>
-                        <button class="btn btn-sm btn-success" type="submit">Submit</button>
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <div class="g-recaptcha" data-sitekey="{{ pub_key }}"></div>
+                                {{ form.submit(class="btn btn-block btn-primary") }}
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

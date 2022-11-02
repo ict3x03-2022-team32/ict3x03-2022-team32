@@ -110,7 +110,6 @@ def requires_access_level(access_level):
             #user = User.query.filter_by(id=current_user.id).first()
 
             if not current_user.allowed(access_level):
-                flash('You do not have access to this resource.', 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
@@ -395,7 +394,7 @@ def reset_page():
         password_reset_link(user.email_address)
         flash('Please check your email for the password reset link.', 'success')
         return redirect(url_for('login_page'))
-    return render_template('reset_email.html', form=form)
+    return render_template('reset_email.html', form=form, pub_key=pub_key)
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
 def reset_password(token):
@@ -982,11 +981,15 @@ def removeTimeout(attempted_user):
     db.session.commit()
 
 @app.route('/logs')
+@login_required
+@requires_access_level(ACCESS['admin'])
 def logs():
     loadData = pd.read_csv('flask-web-log.csv')
     return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
 
 @app.route("/logs/new_log")
+@login_required
+@requires_access_level(ACCESS['admin'])
 def newlogs():
     with open('web.log', 'r') as f:
         return render_template('new_log.html', text=f.read())
