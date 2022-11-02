@@ -114,10 +114,11 @@ class IndustryDataForm(FlaskForm):
 
 class EmailResetForm(FlaskForm):
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
-    submit = SubmitField(label="Submit")
+    submit = SubmitField(label="Submit Email")
 
 class PasswordResetForm(FlaskForm):
-    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])                                        
+    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])    
+    submit = SubmitField(label="Submit Password")                                    
 
 class UploadForm(FlaskForm):
         upload = FileField('CSV and TXT only!', validators=[
