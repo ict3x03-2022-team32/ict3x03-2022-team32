@@ -24,6 +24,8 @@ from flask_bcrypt import Bcrypt
 from functools import wraps
 from dotenv import load_dotenv
 import os
+import pandas as pd
+import csv
 
 from application.form import UploadForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -54,6 +56,8 @@ load_dotenv('data.env')
 pub_key = os.environ.get("pub_key")
 secret = os.environ.get("private_key")
 
+# readData = pd.read_csv('flask-web-log.csv')
+# readData.to_csv('flask-web-log.csv', index=None)
 
 def is_human(catpcha_response):
     payload = {'response': catpcha_response, 'secret': secret }
@@ -326,6 +330,17 @@ def login_page():
         else:
             flash('Please Complete Recaptcha!', category='danger')
     return render_template('login.html', form=form, pub_key=pub_key)
+        attempted_user = User.query.filter_by(username=form.username.data).first()
+        if attempted_user and attempted_user.check_password_correction(
+                attempted_password=form.password.data
+        ):
+            login_user(attempted_user)
+            flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+            app.logger.info(f'Successful login from {attempted_user.username}')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Username and password are not match! Please try again', category='danger')
+            app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
 
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
@@ -976,3 +991,12 @@ def removeTimeout(attempted_user):
     attempted_user.timeouttime = None
     db.session.commit()
 
+@app.route('/logs')
+def logs():
+    loadData = pd.read_csv('flask-web-log.csv')
+    return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
+
+@app.route("/logs/new_log")
+def newlogs():
+    with open('web.log', 'r') as f:
+        return render_template('new_log.html', text=f.read())
