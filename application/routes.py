@@ -10,7 +10,7 @@ from xmlrpc.client import DateTime
 from application import app
 from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
-from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
+from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -284,7 +284,6 @@ def login_page():
         if not session.get("attemptsLogin"):
             session["attemptsLogin"] = 0
         attemptsLogin = session['attemptsLogin']
-        print(session['attemptsLogin']) 
         while attemptsLogin > 10:
              #timeout if fail more than 10 attempts
             session.pop('attemptsLogin', None)
@@ -303,7 +302,6 @@ def login_page():
                 if attempted_user.istimeout == 1:
                     currTime = datetime.now()
                     diff = (currTime - attempted_user.timeouttime).total_seconds()/60 #in minutes
-                    print(diff)
                     if diff >= 5 :
                         #update db
                         removeTimeout(attempted_user)
@@ -327,20 +325,11 @@ def login_page():
                 attemptsLogin = attemptsLogin+1
                 session['attemptsLogin'] = attemptsLogin
                 flash('Username and password are not match! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
         else:
             flash('Please Complete Recaptcha!', category='danger')
-        return render_template('login.html', form=form, pub_key=pub_key)
-        attempted_user = User.query.filter_by(username=form.username.data).first()
-        if attempted_user and attempted_user.check_password_correction(
-                attempted_password=form.password.data
-        ):
-            login_user(attempted_user)
-            flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-            app.logger.info(f'Successful login from {attempted_user.username}')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Username and password are not match! Please try again', category='danger')
-            app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
+    return render_template('login.html', form=form, pub_key=pub_key)
+        
 
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
@@ -348,7 +337,6 @@ def verify_page():
     if not session.get("attemptsOTP"):
         session["attemptsOTP"] = 0
     attemptsOTP = session['attemptsOTP']
-    print(attemptsOTP)
     if request.method == "GET":
         while attemptsOTP <= 5:
             return render_template('verify.html', form=form)
@@ -380,11 +368,15 @@ def verify_page():
                 attempted_user = User.query.filter_by(username=username).first()
                 login_user(attempted_user)
                 flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                app.logger.info(f'Successful login from {attempted_user.username}')
                 return redirect(url_for('dashboard'))
             else:
+                username = session['username']
+                attempted_user = User.query.filter_by(username=username).first()
                 attemptsOTP = attemptsOTP+1
                 session['attemptsOTP'] = attemptsOTP
                 flash('Invalid OTP! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
                 return render_template('verify.html', form=form)
         else:
             flash("Please enter OTP!", category='danger' )
@@ -580,7 +572,6 @@ def download():
 
 
     for u in emp:
-        print ()
         invalid = {"_sa_instance_state","geid"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
@@ -603,7 +594,6 @@ def download1():
     writer = csv.writer(output)
 
     for u in ind:
-        print ()
         invalid = {"_sa_instance_state","industryId"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
