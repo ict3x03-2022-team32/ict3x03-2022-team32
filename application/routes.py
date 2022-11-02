@@ -11,13 +11,16 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
+import pandas as pd
+import csv
 
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
-
+# readData = pd.read_csv('flask-web-log.csv')
+# readData.to_csv('flask-web-log.csv', index=None)
 
 
 @app.route('/')
@@ -110,9 +113,11 @@ def login_page():
         ):
             login_user(attempted_user)
             flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+            app.logger.info(f'Successful login from {attempted_user.username}')
             return redirect(url_for('dashboard'))
         else:
             flash('Username and password are not match! Please try again', category='danger')
+            app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
 
     return render_template('login.html', form=form)
 
@@ -494,3 +499,8 @@ def dashboard():
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
                             industry_graduates_label = json.dumps(industry_graduates_label)
     )
+
+@app.route('/logs')
+def logs():
+    loadData = pd.read_csv('flask-web-log.csv')
+    return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
