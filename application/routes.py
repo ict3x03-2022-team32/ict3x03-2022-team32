@@ -840,7 +840,7 @@ def check_FileData(filename):
         file = open(filename, 'r')
         lines = file.readlines()
         for line in lines:
-            if not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
+            if not line.isspace() and not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
                 return False
         return True
     except:
@@ -906,7 +906,7 @@ def insertDataset(fullFileName):
     # CVS Column Names
     col_names = ['year','schoolName','degName','employmentRate','salary','industry']
     # Use Pandas to parse the CSV file
-    csvData = pd.read_csv(fullFileName, names=col_names, header=None)
+    csvData = pd.read_csv(fullFileName, names=col_names, header=None).dropna()
     
     # Try insert data from csv into dataset and catch if dataset cannot be inserted
     try:

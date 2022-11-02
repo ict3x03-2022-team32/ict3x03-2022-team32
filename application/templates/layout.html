@@ -116,10 +116,9 @@ body {
                                 <a class="nav-item nav-link" href="{{ url_for('industry2') }}">Industry</a>
                                 <a class="nav-item nav-link" href="{{ url_for('upload') }}">Upload CSV</a>
                                 <a class="nav-item nav-link" href="{{ url_for('control_panel')}}">Admin Control Panel</a>
-                                {% endif %}
                                 <a class="nav-item nav-link" href="{{ url_for('industry2') }}">Upload Salary</a>
-                                <a class="nav-item nav-link" href="">Predict Salary</a>
                                 <a class="nav-item nav-link" href="{{ url_for('logs') }}">Audit Log</a> 
+                                {% endif %}
                                 <a class="nav-link" href="{{ url_for('logout_page') }}">Logout</a>
                             </div>
                             {% else %}
