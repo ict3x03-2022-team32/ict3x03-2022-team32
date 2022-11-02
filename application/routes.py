@@ -310,7 +310,7 @@ def login_page():
                         sendOTP(email, otp)
                         return redirect('verify')  
                     else:
-                        flash('Timed out boi', category='danger')
+                        flash('Your account is being timed out', category='danger')
                         return render_template('login.html', form=form)
                 else:
                     session['username'] = form.username.data
