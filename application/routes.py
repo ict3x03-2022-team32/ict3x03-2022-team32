@@ -504,3 +504,8 @@ def dashboard():
 def logs():
     loadData = pd.read_csv('flask-web-log.csv')
     return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
+
+@app.route("/logs/new_log")
+def newlogs():
+    with open('web.log', 'r') as f:
+        return render_template('new_log.html', text=f.read())

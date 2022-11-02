@@ -42,9 +42,10 @@ td{
             <h1>
                 Audit Logs
             </h1>
-            <a href="new_log.html">
-                <button class="btn btn-primary btn-lg">Second log</button>
+            <a href="{{ url_for('newlogs') }}">
+                <button>Severity logs</button>
             </a>
+            
         </div>
         <div class="table-responsive">
             <!-- <table class="table"> 
@@ -113,5 +114,13 @@ td{
                 </table>
         </div>
     </body>
+    <script>
+    $(document).ready(function() {
+        $('#example').DataTable( {
+            responsive: true,
+            "pageLength": 10
+        } );
+    } );
+</script>
 </html>
 {% endblock %}

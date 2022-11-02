@@ -15,7 +15,6 @@
     text-align: center;
 }    
 th{
-    text-align: center;
     border: 2px solid white;
     background-color: black;
     color: white;
@@ -23,7 +22,6 @@ th{
 
 }
 td{
-    text-align: center;
     border: 2px solid rgb(0, 0, 0);
 }
 .audit{
@@ -31,20 +29,30 @@ td{
     margin-right: 65px;
     font-weight: bold;
 }
+.log{
+    text-align: left;
+}
 </style>
 
 <html lang="en">
     <head>
-        <title> Audit logs </title>              
+        <title> Audit Logs </title>              
     </head>
     <body>
         <div class="audit">
             <h1>
                 Audit Logs
             </h1>
-            <input type="button" value="Audit" onclick='myfunction();'>
+            <a href="{{ url_for('logs') }}">
+                <button>Web log</button>
+            </a>
         </div>
         <div class="table-responsive">
+            <table>
+                <pre class="log">
+                    {{ text }}
+                </pre>
+            </table>
         </div>
     </body>
 </html>
