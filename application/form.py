@@ -1,7 +1,7 @@
 from xmlrpc.client import DateTime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
-from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
+from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError, Regexp
 from application.models import User
 
 #For my (YX) file upload
@@ -46,7 +46,7 @@ class RegisterForm(FlaskForm):
         if email_address:
             raise ValidationError('Email Address already exists! Please try a different email address')
 
-    username = StringField(label='User Name:', validators=[Length(min=2, max=30), DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
     password1 = PasswordField(label='Password:', validators=[Length(min=8), DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'), DataRequired()])
