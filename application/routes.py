@@ -41,7 +41,7 @@ from io import StringIO
 import csv
 from csv import writer
 
-ALLOWED_EXTENSIONS = {'csv'}
+ALLOWED_EXTENSIONS = {'csv', 'txt'}
 script_dir = os.path.dirname(__file__)
 rel_path = "..\\tempFileUploadDir\\"
 UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
@@ -820,10 +820,25 @@ def check_IfAllowedFile(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def try_utf8(data):
+    "Returns a Unicode object on success, or None on failure"
+    try:
+       return data.decode('utf-8')
+    except UnicodeDecodeError:
+       return None
+
 def check_IfEmpty(file):
-    content = open(file, 'r').read()
-    if re.search(r'^\s*$', content):
-        return True
+    try:
+        content = open(file, 'r').read()
+        if re.search(r'^\s*$', content):
+            return True
+        udata = try_utf8(content)
+        if udata is None:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 def check_IfBinaryFile(filepathname):
     textchars = bytearray([7,8,9,10,12,13,27]) + bytearray(range(0x20, 0x7f)) + bytearray(range(0x80, 0x100))
