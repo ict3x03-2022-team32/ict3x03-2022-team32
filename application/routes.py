@@ -2,6 +2,7 @@
 import requests
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 import os
 from os import write
 
@@ -263,7 +264,7 @@ def register_page():
                                 password=form.password1.data, isadmin=0, istimeout=0)
             db.session.add(user_to_create)
             db.session.commit()
-            login_user(user_to_create,remember=True,duration=datetime.timedelta(seconds=600))
+            login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
             flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
             return redirect(url_for('dashboard'))
         else:
@@ -365,7 +366,7 @@ def verify_page():
                 session['attemptsOTP'] = 0 #might need reset to 0 if success.
                 username = session['username']
                 attempted_user = User.query.filter_by(username=username).first()
-                login_user(attempted_user,remember=True,duration=datetime.timedelta(seconds=600))
+                login_user(attempted_user,remember=True,duration=timedelta(seconds=600))
                 flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
                 app.logger.info(f'Successful login from {attempted_user.username}')
                 return redirect(url_for('dashboard'))
