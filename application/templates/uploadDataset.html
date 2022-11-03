@@ -1,24 +1,22 @@
 {% extends 'layout.html' %}
 {% block content %}
-<html>
-   <body>
-      <section>
-         <h6 class="display-4 font-weight-normal">Dataset File Upload </h6>
-      </section>
-      
-      <section>
+<div class="col-xs-10 col-sm-6 col-md-6">
+   <h2>Upload CSV Data</h2>
+   <div class="card card-style mb-2">
+       <div class="card-body">
          <form action = "{{ url_for('.upload') }}" method = "POST" enctype = "multipart/form-data">
-            <br>
             {{form.csrf_token}}
-            <br>
-            {{form.upload.label}}
-            <br>
-            {{form.upload}}
+            <div class="form-group">
+               {{form.upload.label}}
+            </div>
+            <div class="form-group">
+               {{form.upload}}
+           </div>
             <!--some code display flash msg-->
-            <button type="submit">Submit</button>
+            <div class="form-group border-bottom pb-3">
+               <button type="submit">Submit</button>
+           </div>
          </form>
-      </section>
-
       {% with messages = get_flashed_messages() %}  
       {% if messages %}  
             {% for message in messages %}  
@@ -26,7 +24,5 @@
             {% endfor %}  
       {% endif %}  
    {% endwith %}  
-
-   </body>
-</html>
+</body>
 {% endblock %}
