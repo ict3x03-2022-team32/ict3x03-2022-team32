@@ -253,8 +253,8 @@ def register_page():
     form = RegisterForm()
     if form.validate_on_submit():
         recaptcha = request.form['g-recaptcha-response']
-        #success = is_human(recaptcha)
-        success = True
+        success = is_human(recaptcha)
+        #success = True
         if success:
             user_to_create = User(username=form.username.data,
                                 email_address=form.email_address.data,
@@ -291,8 +291,8 @@ def login_page():
             return render_template('login.html', form=form)
 
         recaptcha = request.form['g-recaptcha-response']
-        #success = is_human(recaptcha)
-        success = True #bypass recaptcha
+        success = is_human(recaptcha)
+        #success = True #bypass recaptcha
         if success:
             attempted_user = User.query.filter_by(username=form.username.data).first()
             if attempted_user and attempted_user.check_password_correction(

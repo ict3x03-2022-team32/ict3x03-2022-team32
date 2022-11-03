@@ -1,9 +1,24 @@
 from flask_login import user_login_confirmed
-import wsgi
 from dotenv import load_dotenv
 import os
+import random
 import sys
 import fileinput
+import pytest
+import time 
+
+#selenium libraries
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+
+#recaptcha libraries
+import speech_recognition as sr
+#import ffmpy
+import requests
+import urllib
+#import pydub
 
 
 load_dotenv('data.env')
@@ -18,15 +33,145 @@ testregisteruser = os.environ.get("testregisteruser")
 
 
 
-##################################################################################################################################################################################
 
+##################################################################################################################################################################################    
+def delay():
+    time.sleep(random.randint(2,3))
+
+"""
+def test_index_page():
+    
+    #GIVEN the index page
+    #WHEN the '/' page is requested (GET)
+    #THEN check that the response is valid
+    
+    driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+
+    #yield
+    delay()
+    driver.quit()
+"""
+'''
+def test_register_page_username():
+    driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/register")
+
+    delay()
+
+    frames = driver.find_element(By.XPATH,"/html/body/div[2]/div[4]")
+    #frames2 = frames.find_elements(By.TAG_NAME,"iframe")
+
+    user_name=driver.find_element(By.ID, "username")
+    user_name.send_keys('<SCRIPT SRC=//xss.rock/.j>')
+
+    invalidXPATH = '/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span'
+
+    driver.find_element(By.ID, "submit").click()
+    checkifmessageexist = driver.find_element(By.XPATH, invalidXPATH)
+    assert checkifmessageexist == '[Invalid input.]'
+
+    
+
+'''
+def test_login_page():
+    """
+    GIVEN the index page
+    WHEN the '/' page is requested (GET)
+    THEN check that the response is valid
+    """
+    chrome_options = Options()
+    chrome_options.add_argument("--disable-extensions")
+    #driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    #driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options, executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/login")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+    delay()
+
+    
+    #switch to recaptcha frame
+    #frames = driver.find_elements_by_tag_name("iframe")
+    frames = driver.find_element(By.TAG_NAME, "iframe")
+    driver.switch_to.frame(frames)
+    #driver.switch_to.frame(frames[0])
+    delay()
+    
+
+    #clcik on checkbox to activate recaptcha
+    driver.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
+
+    # switch to recaptcha audio control frame
+    delay()
+    driver.switch_to.default_content()
+    #frames = driver.find_elements_by_xpath("/html/body/div[2]/div[4]").find_elements_by_tag_name("iframe")
+    frames = driver.find_element(By.XPATH,"/html/body/div[2]/div[4]")
+    frames2 = frames.find_elements(By.TAG_NAME,"iframe")
+    driver.switch_to.frame(frames2[0])
+    delay()
+
+    #Click on audio challenge
+    driver.find_element(By.ID,"recaptcha-audio-button").click()
+
+    #switch to recaptcha audio challenge frame
+    driver.switch_to.default_content()
+    frames=driver.find_element(By.TAG_NAME,"iframe")
+    #driver.switch_to.frame(frames[-1])
+    driver.switch_to.frame(frames[-1])
+    delay()
+
+    #click on play button
+    driver.find_elements(By.XPATH,"/html/body/div/div/div[3]/div/button").click()
+
+    #get the mp3 audio file
+    src = driver.find_element(By.ID, "audio-source").get_attribute("src")
+    print ("[INFO] Audio src: %s"%src)
+    #download the mp3 audio file from the source
+    urllib.request.urlretrieve(src, os.getcwd()+"\\sample.mp3")
+    sound = pydub.AudioSegment.from_mp3(os.getcwd()+"\\sample.mp3")
+    sound.export(os.getcwd()+"\\sample.wav", format="Wav")
+    sample_audio = sr.AudioFile(os.getcwd()+"\\sample.wav")
+    r = sr.Recognizer()
+    with sample_audio as source:
+        audio = r.record(source)
+    
+    #translate audio to text with google voice recognition
+    key=r.recognize_google(audio)
+    print("[INFO] Recaptcha Passcode: %s" %key)
+
+    #key in results and submit
+    driver.find_element(By.ID,"audio-response").send_keys(key.lower())
+    driver.find_element(By.ID,'audio-response').send_keys(Keys.ENTER)
+
+    #yield
+    delay()
+    driver.quit()
+
+'''
 def test_index_page(client):
     """
     GIVEN the index page
     WHEN the '/' page is requested (GET)
     THEN check that the response is valid
     """
-
+    #global driver
+    driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/")
     #flask_app = app('conftest.cfg')
     response = client.get('/')
     assert response.status_code == 200
@@ -35,7 +180,11 @@ def test_index_page(client):
     assert b'Login' in response.data
     assert b'Home' in response.data
     assert b'dadwad' not in response.data
-
+    #yield
+    time.sleep(10)
+    driver.quit()
+'''
+'''
 def test_login_page(client):
     """
     GIVEN the login page
@@ -119,7 +268,7 @@ def test_register_function(client):
         assert b'Sign in' not in response.data
         assert b'Register' not in response.data
         assert b'Data Analytics for Employment Salary in Industries of Singapore' not in response.data
-
+'''
 '''
 def test_forgetPassword_function(client):
     

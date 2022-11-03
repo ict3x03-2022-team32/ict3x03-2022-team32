@@ -1,9 +1,11 @@
+'''
 import pytest
 import wsgi
 from dotenv import load_dotenv
 import os
 from urllib.parse import quote
 from flask import Flask
+
 
 load_dotenv('data.env')
 
@@ -19,6 +21,7 @@ from flask_wtf.csrf import generate_csrf
 # CSRF system depends on cookies working correctly. This little class is a
 # fake request that forwards along requests to the test client for setting
 # cookies.
+
 class RequestShim(object):
     """
     A fake request that proxies cookie-related methods to a Flask test client.
@@ -81,10 +84,6 @@ class FlaskClient(BaseFlaskClient):
 
 #####################################################################################################################
 
-[tool:pytest]
-mocked-sessions=database.db.session
-mocked-engines=database.engine
-
 @pytest.fixture
 def app():
     app = wsgi.app
@@ -94,6 +93,7 @@ def app():
     
     # other setup can go here
     yield app
+    
 
     # clean up / reset resources here
 
@@ -105,3 +105,6 @@ def client(app):
 @pytest.fixture()
 def runner(app):
     return app.test_cli_runner()
+
+
+'''

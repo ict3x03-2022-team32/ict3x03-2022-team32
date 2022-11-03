@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os
+
 load_dotenv('data.env')
 
 db_key = os.environ.get("db_key")
