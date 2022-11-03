@@ -8,8 +8,8 @@ from application.models import User
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
-    username = StringField(label='User Name:', validators=[DataRequired()])
-    password = PasswordField(label='Password:', validators=[DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=20),DataRequired()])
+    password = PasswordField(label='Password:', validators=[Length(min=8),DataRequired()])
     submit = SubmitField(label='Sign in')
 
 
