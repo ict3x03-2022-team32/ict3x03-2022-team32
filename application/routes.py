@@ -255,6 +255,8 @@ def industry2():
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     form = RegisterForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         recaptcha = request.form['g-recaptcha-response']
         success = is_human(recaptcha)
@@ -280,6 +282,8 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     form = LoginForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         if not session.get("attemptsLogin"):
             session["attemptsLogin"] = 0
@@ -325,7 +329,7 @@ def login_page():
                 attemptsLogin = attemptsLogin+1
                 session['attemptsLogin'] = attemptsLogin
                 flash('Username and password are not match! Please try again', category='danger')
-                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
+                app.logger.warning(f'Unsuccessful login from {form.username.data}')
         else:
             flash('Please Complete Recaptcha!', category='danger')
     return render_template('login.html', form=form, pub_key=pub_key)
@@ -334,6 +338,8 @@ def login_page():
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
     form = OTPForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if not session.get("attemptsOTP"):
         session["attemptsOTP"] = 0
     attemptsOTP = session['attemptsOTP']
@@ -386,12 +392,14 @@ def verify_page():
 @app.route('/reset_email', methods=['GET', 'POST'])
 def reset_page():
     form = EmailResetForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         try:
             user = User.query.filter_by(email_address=form.email_address.data).first_or_404()
         except:
             flash('You have entered an invalid email address!', category='danger')
-            return render_template('reset_email.html', form=form)
+            return render_template('reset_email.html', form=form, pub_key=pub_key)
         password_reset_link(user.email_address)
         flash('Please check your email for the password reset link.', 'success')
         return redirect(url_for('login_page'))
@@ -399,6 +407,8 @@ def reset_page():
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
 def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     try:
         password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         email_address = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=300)
@@ -419,6 +429,7 @@ def reset_password(token):
         db.session.add(user)
         db.session.commit()
         flash('Your password has been updated!', 'success')
+        
         return redirect(url_for('login_page'))
 
     return render_template('password_reset.html',token=token, form=form)

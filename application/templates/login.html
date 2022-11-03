@@ -22,6 +22,10 @@ h6 span {
     background:#fff; 
     padding:0 10px; 
 }
+.forgot{
+    margin-top: 20px;
+    margin-left: 200px;
+}
 </style>
 <head>
     <script src="https://www.google.com/recaptcha/api.js"></script>
@@ -61,10 +65,9 @@ h6 span {
                                 <a class="btn btn-block btn-secondary" href="{{ url_for('register_page') }}">Register</a>
                             </div>
                         </div>   
-                        <br>
                         <div class="row">
-                            <div class="col-12">
-                                <a href="{{url_for('reset_page')}}">Forgot password</a>
+                            <div class="forgot">
+                                <a href="{{url_for('reset_page')}}">Forgot password?</a>
                             </div>
                         </div>                   
                     </form>
