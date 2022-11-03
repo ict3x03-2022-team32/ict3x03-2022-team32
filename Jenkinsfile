@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Checkout Scm') {
       steps {
-        git(credentialsId: 'RH', branch:'main', url: 'https://github.com/ict3x03-2022-team32/ict3x03-2022-team32.git')
+        git(credentialsId: 'RH', branch:'development', url: 'https://github.com/ict3x03-2022-team32/ict3x03-2022-team32.git')
       }
     }
 
