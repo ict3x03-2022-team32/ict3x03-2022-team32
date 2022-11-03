@@ -523,11 +523,27 @@ def check_IfAllowedFile(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def check_IfEmpty(file):
-    content = open(file, 'r').read()
-    if re.search(r'^\s*$', content):
-        return True
 
+def try_utf8(data):
+    "Returns a Unicode object on success, or None on failure"
+    try:
+       return data.decode('utf-8')
+    except UnicodeDecodeError:
+       return None
+
+def check_IfEmpty(file):
+    try:
+        content = open(file, 'r').read()
+        if re.search(r'^\s*$', content):
+            return True
+        udata = try_utf8(content)
+        if udata is None:
+            return True
+        else:
+            return False
+    except:
+        return False
+    
 def check_IfBinaryFile(filepathname):
     textchars = bytearray([7,8,9,10,12,13,27]) + bytearray(range(0x20, 0x7f)) + bytearray(range(0x80, 0x100))
     is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
@@ -578,6 +594,7 @@ def upload():
         # Check if request body for form.upload.data is too large
         if get_Fileobjectsize(f) < 1 * (1024 ** 2) and check_IfAllowedFile(f.filename):
             filename = secure_filename(f.filename)
+            print (filename)
             fullFileName = os.path.join(UPLOAD_FOLDER, filename)
             f.save(fullFileName)
             # Check if file is a binary or text file
