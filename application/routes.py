@@ -299,7 +299,7 @@ def login_page():
             timeout(form.username.data)
             flash('EXCEEDED limit for password attempts', category='danger')
             app.logger.warning(f'{form.username.data} had 10 failed login attempts.')
-            return render_template('login.html', form=form)
+            return render_template('login.html', form=form, pub_key=pub_key)
 
         recaptcha = request.form['g-recaptcha-response']
         success = is_human(recaptcha)
@@ -322,7 +322,7 @@ def login_page():
                         return redirect('verify')  
                     else:
                         flash('Your account is being timed out', category='danger')
-                        return render_template('login.html', form=form)
+                        return render_template('login.html', form=form, pub_key=pub_key)
                 else:
                     session['username'] = form.username.data
                     otp = randint(000000,999999) #6 digit otp
