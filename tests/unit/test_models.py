@@ -44,7 +44,8 @@ def test_login_page_WrongUsernameField():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
-    driver.get("http://localhost:5000/login")
+    #driver.get("http://localhost:5000/login")
+    driver.get("http://securitycrusaders:5000/login")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -99,7 +100,8 @@ def test_login_page_WrongPasswordField():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
-    driver.get("http://localhost:5000/login")
+    #driver.get("http://localhost:5000/login")
+    driver.get("http://securitycrusaders:5000/login")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -154,7 +156,8 @@ def test_login_page_InvalidPasswordField():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
-    driver.get("http://localhost:5000/login")
+    driver.get("https://securitycrusaders.live/login")
+    #driver.get("http://localhost:5000/login")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -209,7 +212,8 @@ def test_register_page_InvalidUsernameField():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
-    driver.get("http://localhost:5000/register")
+    driver.get("https://securitycrusaders.live/register")
+    #driver.get("https://localhost:5000/register")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -272,7 +276,8 @@ def test_register_page_InvalidPasswordField():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
-    driver.get("http://localhost:5000/register")
+    #driver.get("http://localhost:5000/register")
+    driver.get("https://securitycrusaders.live/register")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
