@@ -33,7 +33,7 @@ def test_login_page_WrongUsernameField():
     #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
-    driver=uc.Chrome()
+    driver=uc.Chrome(headless=True)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -82,7 +82,7 @@ def test_login_page_WrongPasswordField():
     #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
-    driver=uc.Chrome()
+    driver=uc.Chrome(headless=True)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -180,7 +180,7 @@ def test_register_page_InvalidUsernameField():
     #THEN check that the response is valid and the user is not redirected to the dashboard page
     """
 
-    driver=uc.Chrome()
+    driver=uc.Chrome(headless=True)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/register")
@@ -237,7 +237,7 @@ def test_register_page_InvalidPasswordField():
     #THEN check that the response is valid and the user is not redirected to the dashboard page
     """
 
-    driver=uc.Chrome()
+    driver=uc.Chrome(headless=True)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/register")
