@@ -1,24 +1,197 @@
 # from werkzeug.wrappers import request
+import requests
+from datetime import date
+from datetime import datetime
+from datetime import timedelta
+import os
 from os import write
+
 import re
+from xmlrpc.client import DateTime
 from application import app
-from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response
-from application.form import UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm
-from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment
+from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session, escape, Markup
+from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
+from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import distinct
 from operator import and_
+from itsdangerous import URLSafeTimedSerializer
+from flask_mail import Mail, Message
+from threading import Thread
+from flask_bcrypt import Bcrypt
+from functools import wraps
+from dotenv import load_dotenv
+import os
+import pandas as pd
+import csv
+import time
 
+from application.form import UploadForm
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from werkzeug.utils import secure_filename
+import pandas as pd
+from pyparsing import *
+from application import limiter
+
+import pymysql
+from random import *
 import io
 from io import StringIO 
 import csv
 from csv import writer
 
+ALLOWED_EXTENSIONS = {'csv', 'txt'}
+script_dir = os.path.dirname(__file__)
+rel_path = "..\\tempFileUploadDir\\"
+UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
+
+mail = Mail(app)
+bcrypt = Bcrypt(app)
+ACCESS = {
+    'user': 0,
+    'admin': 1
+}
+load_dotenv('data.env')
+pub_key = os.environ.get("pub_key")
+secret = os.environ.get("private_key")
+
+# readData = pd.read_csv('flask-web-log.csv')
+# readData.to_csv('flask-web-log.csv', index=None)
+
+def is_human(catpcha_response):
+    payload = {'response': catpcha_response, 'secret': secret }
+    response = requests.post("https://www.google.com/recaptcha/api/siteverify", data=payload)
+    response_text = json.loads(response.text)
+    return response_text['success']
+
+def send_async_email(msg):
+    with app.app_context():
+        mail.send(msg)
+
+#email OTP function
+def sendOTP(recipient, otp):
+    msg = Message('OTP for Login', recipients = [recipient])  
+    msg.body = str(otp)  
+    mail.send(msg)
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template('csrf_error.html', reason=e.description), 400
+
+def send_email(subject, recipients, html_body):
+    msg = Message(subject, recipients=recipients)
+    msg.html = html_body
+    thr = Thread(target=send_async_email, args=[msg])
+    thr.start()
+
+def password_reset_link(user_email):
+    password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+    password_reset_url = url_for(
+        'reset_password',
+        token = password_reset_serializer.dumps(user_email, salt='password-reset-salt'),
+        _external=True)
+
+    html = render_template(
+        'send_email.html',
+        password_reset_url=password_reset_url)
+
+    send_email('Request for new password', [user_email], html)
+
+### custom wrap to determine access level ###
+def requires_access_level(access_level):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated: #the user is not logged in
+                return redirect(url_for('login'))
+
+            #user = User.query.filter_by(id=current_user.id).first()
+
+            if not current_user.allowed(access_level):
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+    ################ ADMIN ACCESS FUNCTIONALITY ###################
+
+# control panel
+@app.route('/control_panel')
+@requires_access_level(ACCESS['admin'])
+def control_panel():
+    all_users = User.query.all()
+    return render_template('control_panel.html', users=all_users, pageTitle='My Flask App Control Panel')
 
 
+# user details & update
+@app.route('/user_detail/<int:user_id>', methods=['GET','POST'])
+@requires_access_level(ACCESS['admin'])
+def user_detail(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+    form.id.data = user.id
+    # form.name.data = user.name
+    form.email.data = user.email_address
+    form.username.data = user.username
+    form.isadmin.data = user.isadmin
+    form.istimeout.data = user.istimeout
+    form.timeoutTime.data = user.timeouttime
+    return render_template('user_detail.html', form=form, pageTitle='User Details')
+
+# update user
+@app.route('/update_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = UserDetailForm()
+
+    orig_user = user.username # get user details stored in the database - save username into a variable
+
+    if form.validate_on_submit():
+        user.email_address = form.email.data
+
+        new_user = form.username.data
+
+        if new_user != orig_user: # if the form data is not the same as the original username
+            valid_user = User.query.filter_by(username=new_user).first() # query the database for the usernam
+            if valid_user is not None:
+                flash("That username is already taken...", 'danger')
+                app.logger.warning(f'Username {new_user} already exists')
+                return redirect(url_for('control_panel'))
+
+        # if the values are the same, we can move on.
+        user.username = form.username.data
+        user.isadmin = request.form['access_lvl']
+        db.session.commit()
+        flash('The user has been updated.', 'success')
+        app.logger.info(f'Username {orig_user} is changed to {user.username}')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+# delete user
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@requires_access_level(ACCESS['admin'])
+def delete_user(user_id):
+    if request.method == 'POST': #if it's a POST request, delete the friend from the database
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        flash('User has been deleted.', 'success')
+        app.logger.info(f'The user, {user.username}, has been deleted')
+        return redirect(url_for('control_panel'))
+
+    return redirect(url_for('control_panel'))
+
+
+    ################ USER ACCESS FUNCTIONALITY ###################
+@app.errorhandler(429)
+def ratelimit_handler(e):
+  return "You have exceeded your rate-limit"
 
 @app.route('/')
 @app.route('/home')
@@ -37,7 +210,9 @@ def index():
     return render_template('index.html', entries = entries, form=form)
 
 @app.route('/employment' , methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 @login_required
+@limiter.limit("240/minute")
 def employments():
     form = Form()
     form.degName.choices =  [(degree.degName) for degree in Degree.query.order_by(Degree.degId).all() ]
@@ -59,6 +234,7 @@ def employments():
 
 
 @app.route('/industry' , methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 @login_required
 def industry2():
     form = Form()
@@ -83,40 +259,192 @@ def industry2():
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     form = RegisterForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
-        user_to_create = User(username=form.username.data,
-                              email_address=form.email_address.data,
-                              password=form.password1.data)
-        db.session.add(user_to_create)
-        db.session.commit()
-        login_user(user_to_create)
-        flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
-        return redirect(url_for('dashboard'))
-    if form.errors != {}: #If there are not errors from the validations
-        for err_msg in form.errors.values():
-            flash(f'There was an error with creating a user: {err_msg}', category='danger')
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            user_to_create = User(username=form.username.data,
+                                email_address=form.email_address.data,
+                                password=form.password1.data, isadmin=0, istimeout=0)
+            db.session.add(user_to_create)
+            db.session.commit()
+            login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
+            flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
+            app.logger.info(f'{user_to_create.username} has been registered.')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
+        if form.errors != {}: #If there are not errors from the validations
+            for err_msg in form.errors.values():
+                flash(f'There was an error with creating a user: {err_msg}', category='danger')
 
-    return render_template('register.html', form=form)
+    return render_template('register.html', form=form, pub_key=pub_key)
 
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     form = LoginForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
-        attempted_user = User.query.filter_by(username=form.username.data).first()
-        if attempted_user and attempted_user.check_password_correction(
-                attempted_password=form.password.data
-        ):
-            login_user(attempted_user)
-            flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-            return redirect(url_for('dashboard'))
+        if not session.get("attemptsLogin"):
+            session["attemptsLogin"] = 0
+        attemptsLogin = session['attemptsLogin']
+        while attemptsLogin > 10:
+             #timeout if fail more than 10 attempts
+            session.pop('attemptsLogin', None)
+            session["attemptsLogin"] = 0
+            timeout(form.username.data)
+            flash('EXCEEDED limit for password attempts', category='danger')
+            app.logger.warning(f'{form.username.data} had more than 10 failed login attempts.')
+            return render_template('login.html', form=form, pub_key=pub_key)
+
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            attempted_user = User.query.filter_by(username=form.username.data).first()
+            if attempted_user and attempted_user.check_password_correction(
+                    attempted_password=form.password.data
+            ):
+                if attempted_user.istimeout == 1:
+                    currTime = datetime.now()
+                    diff = (currTime - attempted_user.timeouttime).total_seconds()/60 #in minutes
+                    if diff >= 5 :
+                        #update db
+                        removeTimeout(attempted_user)
+                        session['username'] = form.username.data
+                        otp = randint(000000,999999)
+                        session['otp'] = otp
+                        email = attempted_user.email_address
+                        sendOTP(email, otp)
+                        return redirect('verify')  
+                    else:
+                        flash('Your account is being timed out', category='danger')
+                        return render_template('login.html', form=form, pub_key=pub_key)
+                else:
+                    session['username'] = form.username.data
+                    otp = randint(000000,999999) #6 digit otp
+                    session['otp'] = otp 
+                    email = attempted_user.email_address
+                    sendOTP(email, otp)
+                    return redirect('verify')
+            else:
+                attemptsLogin = attemptsLogin+1
+                session['attemptsLogin'] = attemptsLogin
+                flash('Username and password are not match! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {form.username.data}')
         else:
-            flash('Username and password are not match! Please try again', category='danger')
+            flash('Please Complete Recaptcha!', category='danger')
+    return render_template('login.html', form=form, pub_key=pub_key)
+        
 
-    return render_template('login.html', form=form)
+@app.route('/verify', methods = ["POST", "GET"])
+def verify_page():
+    form = OTPForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if not session.get("attemptsOTP"):
+        session["attemptsOTP"] = 0
+    attemptsOTP = session['attemptsOTP']
+    if request.method == "GET":
+        while attemptsOTP <= 5:
+            return render_template('verify.html', form=form)
+        #exceed 5 attemptsOTP (redirect to login and timeout)
+        flash('EXCEEDED limit for OTP', category='danger')
+        #timeout
+        session['attemptsOTP'] = 0 #reset back to 0 
+        username = session['username']
+        timeout(username)
+        return redirect(url_for('login_page'))
+
+    if request.method == "POST":
+        while attemptsOTP > 5:
+            #exceed 5 attemptsOTP (redirect to login and timeout)
+            flash('EXCEEDED limit for OTP', category='danger')
+            #timeout
+            session['attemptsOTP'] = 0 #reset back to 0 
+            username = session['username']
+            timeout(username)
+            return redirect(url_for('login_page'))
+        
+        user_otp = request.form['otp']
+        attemptsOTP = session['attemptsOTP']
+        if user_otp != "":
+            if session['otp'] == int(user_otp):
+                attemptsOTP = attemptsOTP+1
+                session['attemptsOTP'] = 0 #might need reset to 0 if success.
+                username = session['username']
+                attempted_user = User.query.filter_by(username=username).first()
+                login_user(attempted_user,remember=True,duration=timedelta(seconds=600))
+                flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                app.logger.info(f'Successful login from {attempted_user.username}')
+                return redirect(url_for('dashboard'))
+            else:
+                username = session['username']
+                attempted_user = User.query.filter_by(username=username).first()
+                attemptsOTP = attemptsOTP+1
+                session['attemptsOTP'] = attemptsOTP
+                flash('Invalid OTP! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
+                return render_template('verify.html', form=form)
+        else:
+            flash("Please enter OTP!", category='danger' )
+            return render_template('verify.html', form=form)
 
 
+@app.route('/reset_email', methods=['GET', 'POST'])
+def reset_page():
+    form = EmailResetForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if form.validate_on_submit():
+        try:
+            user = User.query.filter_by(email_address=form.email_address.data).first_or_404()
+        except:
+            flash('You have entered an invalid email address!', category='danger')
+            return render_template('reset_email.html', form=form, pub_key=pub_key)
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            password_reset_link(user.email_address)
+            flash('Please check your email for the password reset link.', 'success')
+            app.logger.info(f'{user.username} has request for password reset')
+            return redirect(url_for('login_page'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
+    return render_template('reset_email.html', form=form, pub_key=pub_key)
+
+@app.route('/reset_email/<token>', methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    try:
+        password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        email_address = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=300)
+    except:
+        flash('Invalid or expired password reset link!', category='danger')
+        return redirect(url_for('login_page'))
+
+    form = PasswordResetForm()
+
+    if form.validate_on_submit():
+        try:
+            user = User.query.filter_by(email_address=email_address).first_or_404()
+        except:
+            flash('Invalid email address!', category='danger')
+            return redirect(url_for('login_page'))
+
+        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        db.session.add(user)
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        
+        return redirect(url_for('login_page'))
+
+    return render_template('password_reset.html',token=token, form=form)
 
 
 @app.route('/add', methods = ["POST", "GET"])
@@ -254,6 +582,7 @@ def delete3(entry_id):
 
 @app.route('/download/report/csv')
 @login_required
+@limiter.limit("30/minute")
 def download():
     def without_keys(d, keys):
         return {x: d[x] for x in d if x not in keys}
@@ -266,17 +595,18 @@ def download():
 
 
     for u in emp:
-        print ()
         invalid = {"_sa_instance_state","geid"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning('%s downloaded a copy of the employment data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employment_report.csv"})
 
 
 
 
 @app.route('/download1/report/csv')
+@limiter.limit("30/minute")
 @login_required
 def download1():
     def without_keys(d, keys):
@@ -288,11 +618,11 @@ def download1():
     writer = csv.writer(output)
 
     for u in ind:
-        print ()
         invalid = {"_sa_instance_state","industryId"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning('%s downloaded a copy of the industry data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=industry_report.csv"})
 
 
@@ -306,9 +636,22 @@ def logout_page():
 
 #------------------------Dash board Functions (Use SQL queries to retreive and analyse data )------------------------------------
 
-@app.route('/dashboard')
+@app.route('/dashboard' , methods = ["POST", "GET"])
 @login_required
 def dashboard():
+    form = MessageDataForm()
+    
+    entries = comments.query.filter_by()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            comment = request.form['comments']
+            new_date = datetime.now()
+            cname = current_user.username
+            entry = comments(comment,new_date,cname)
+            db.session.add(entry)
+            db.session.commit()
+            flash(f"Comment Added", "success")
+            return redirect(url_for('dashboard'))
     #Pie chart: Industry vacancy in latest year
     #MAX year
     #SELECT MAX(year) FROM industry
@@ -492,5 +835,202 @@ def dashboard():
                             unienrolment_arts_intake = json.dumps(unienrolment_arts_intake),
                             unienrolment_arts_enrolment = json.dumps(unienrolment_arts_enrolment),
                             industry_graduates = json.dumps(industry_graduates, cls=DecimalEncoder),                            #added , cls=DecimalEncoder
-                            industry_graduates_label = json.dumps(industry_graduates_label)
+                            industry_graduates_label = json.dumps(industry_graduates_label),
+                            form=form,
+                            entries = entries
     )
+
+#------------------------Upload CSV file function (to upload dataset into database)------------------------------------#
+
+def check_IfAllowedFile(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def try_utf8(data):
+    "Returns a Unicode object on success, or None on failure"
+    try:
+       return data.decode('utf-8')
+    except UnicodeDecodeError:
+       return None
+
+def check_IfEmpty(file):
+    try:
+        content = open(file, 'r').read()
+        if re.search(r'^\s*$', content):
+            return True
+        udata = try_utf8(content)
+        if udata is None:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def check_IfBinaryFile(filepathname):
+    textchars = bytearray([7,8,9,10,12,13,27]) + bytearray(range(0x20, 0x7f)) + bytearray(range(0x80, 0x100))
+    is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
+
+    if is_binary_string(open(filepathname, 'rb').read(1024)):
+       return True
+    else:
+       return False
+
+def check_FileData(filename):
+    try:
+        file = open(filename, 'r')
+        lines = file.readlines()
+        for line in lines:
+            if not line.isspace() and not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
+                return False
+        return True
+    except:
+        return False
+
+def get_Fileobjectsize(fobj):
+    if fobj.content_length:
+        return fobj.content_length
+
+    try:
+        pos = fobj.tell()
+        fobj.seek(0, 2)  #seek to end
+        size = fobj.tell()
+        fobj.seek(pos)  # back to original position
+        return size
+    except (AttributeError, IOError):
+        pass
+
+    # in-memory file object that doesn't support seeking or tell
+    return 0  #assume small enough
+
+@app.route('/upload', methods=['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET', 'POST'])
+@limiter.limit("30/minute")
+def upload():
+
+    form = UploadForm()
+
+    if form.validate_on_submit():
+        f = form.upload.data
+        #app.logger.warning('%s attempted to upload a file ', current_user.username)
+        # Check if request body for form.upload.data is too large
+        if get_Fileobjectsize(f) < 1 * (1024 ** 2) and check_IfAllowedFile(f.filename):
+            filename = secure_filename(f.filename)
+            fullFileName = os.path.join(UPLOAD_FOLDER, filename)
+            f.save(fullFileName)
+            # Check if file is a binary or text file
+            if check_IfBinaryFile(fullFileName):
+                flash('File is not a csv/txt file')
+                app.logger.warning('%s uploaded a binary file and not a file containing text data', current_user.username)
+                os.remove(fullFileName)
+                return render_template('uploadDataset.html', form=form)
+            # Check if file is empty or file size is too large
+            if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
+                flash ("File is either empty or too large")
+                app.logger.warning('%s uploaded a file that is either empty or too large', current_user.username)
+                os.remove(fullFileName)
+            else:
+                # Check if data format in CSV/txt file follows a certain format
+                if check_FileData(fullFileName) :
+                    return insertDataset(fullFileName)
+                else:
+                    flash ("CSV File format is incorrect", category='danger')
+                    app.logger.warning('%s uploaded a file that does not follow dataset format', current_user.username)
+                    os.remove(fullFileName)
+        else:
+            flash('File size is either too big or file extension is not allowed', category='danger')
+            app.logger.warning('%s uploaded a file whose size is either too big or file whose extension is not allowed', 
+            current_user.username)
+    return render_template('uploadDataset.html', form=form)
+def insertDataset(fullFileName):
+    # CVS Column Names
+    col_names = ['year','schoolName','degName','employmentRate','salary','industry']
+    # Use Pandas to parse the CSV file
+    csvData = pd.read_csv(fullFileName, names=col_names, header=None).dropna()
+    
+    # Try insert data from csv into dataset and catch if dataset cannot be inserted
+    try:
+        # Loop through the Rows
+        for i,row in csvData.iterrows():
+            newEmployement = employment(year = row['year'], 
+            schoolName = row['schoolName'], 
+            degName = row['degName'] , 
+            employmentRate = row['employmentRate'] , 
+            salary = row['salary'], 
+            industry = row['industry'])
+            db.session.add(newEmployement)   
+            db.session.commit()
+    except:
+        # Remove file after unsuccessful data upload
+        os.remove(fullFileName)
+        flash('Dataset was not fully inserted successfully, please contact the database admin for help')
+        app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
+        return redirect(url_for('control_panel'))
+    app.logger.info('%s successfully uploaded dataset into database', current_user.username)
+    db.session.close()
+    # Remove file after successful data upload
+    os.remove(fullFileName)
+    flash('Dataset Successfully uploaded')
+    return redirect(url_for('control_panel'))
+
+
+
+@app.route('/download/report/csv', methods=['GET'])
+# @login_required
+# @rbac.allow(['administrator'], methods=['GET'])
+@limiter.limit("30/minute")
+def download_report():
+	conn = None
+	cursor = None
+	try:
+		conn = db.connect()
+		cursor = conn.cursor(pymysql.cursors.DictCursor)
+		
+		cursor.execute("SELECT year,schooName,degName, employmentRate, salary, industry FROM employment")
+		result = cursor.fetchall()
+
+		output = io.StringIO()
+		writer = csv.writer(output)
+		
+		line = ['year,schooName,degName, employmentRate, salary, industry']
+		writer.writerow(line)
+
+		for row in result:
+			line = [str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry']]
+			writer.writerow(line)
+
+		output.seek(0)
+		#app.logger.warning('%s downloaded a copy of the data from the database', current_user.username)
+		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
+	except Exception as e:
+		print(e)
+	finally:
+		cursor.close() 
+		conn.close()
+
+#timeout function 
+def timeout(username):
+    user = User.query.filter_by(username=username).first()
+    user.istimeout = 1
+    user.timeouttime = datetime.now()
+    db.session.commit()
+
+def removeTimeout(attempted_user):
+    attempted_user.istimeout = 0
+    attempted_user.timeouttime = None
+    db.session.commit()
+
+@app.route('/logs')
+@login_required
+@requires_access_level(ACCESS['admin'])
+def logs():
+    loadData = pd.read_csv('flask-web-log.csv')
+    return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
+
+@app.route("/logs/new_log")
+@login_required
+@requires_access_level(ACCESS['admin'])
+def newlogs():
+    with open('web.log', 'r') as f:
+        return render_template('new_log.html', text=f.read())

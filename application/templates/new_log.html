@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Logs page
+{% endblock %}
+{% block content %}
+<style>
+ .table-responsive{
+    width: 100%;
+    margin-bottom: 50px;
+    margin-top: 20px;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    text-align: center;
+    border: 5px solid black;
+}    
+th{
+    border: 2px solid white;
+    background-color: black;
+    color: white;
+    height: 50px;
+
+}
+td{
+    border: 2px solid rgb(0, 0, 0);
+}
+
+.log{
+    text-align: left;
+}
+</style>
+
+<html lang="en">
+    <head>
+        <title> Audit Logs </title>              
+    </head>
+    <body>
+        <div class="col-sm-10 ml-auto mr-auto ">
+            <h1>Audit Logs (Severity logs)</h1>
+            <a href="{{ url_for('logs') }}">
+                <button>Web log</button>
+            </a>
+            <div class="table-responsive">
+            <table>
+                <pre class="log">
+                    {{ text }}
+                </pre>
+            </table>
+            </div>
+        </div>
+    </body>
+</html>
+{% endblock %}

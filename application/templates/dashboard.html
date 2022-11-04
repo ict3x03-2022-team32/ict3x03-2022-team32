@@ -11,6 +11,12 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="vacancy_industry"></canvas>
+                        <a id="vacancyExport"
+                        download="Vacancy Industry.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                 </div>
             </div>
@@ -20,6 +26,12 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="graduates_industry"></canvas>
+                        <a id="gradExport"
+                        download="Graduates Industry.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                 </div>
             </div>
@@ -31,6 +43,12 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="industry_salary"></canvas>
+                        <a id="salaryExport"
+                        download="Salary Industry.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                 </div>
             </div>
@@ -42,6 +60,12 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="industry_information"></canvas>
+                        <a id="infoExport"
+                        download="Industry Info.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                     <div class="row">
                         <div class="col-12">
@@ -82,6 +106,12 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="employmentrate_salary"></canvas>
+                        <a id="empsalaryExport"
+                        download="EmpSalary.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                 </div>
             </div>
@@ -91,12 +121,65 @@
                 <div class="card-body">
                     <div class="chart-container" style="position: relative;">
                         <canvas id="employmentrate_graduates"></canvas>
+                        <a id="empgradExport"
+                        download="EmpGrad.jpg"
+                        href=""
+                        class="btn btn-primary float-right bg-flat-color-1"
+                        >
+                            Export Chart</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- COMMENT SECTION -->
+<div class="container">
+    <div class="w-100 mb-3">
+        <h4>Comment Section</H4>
+        {% for entries in entries %}
+        <div class='message'>
+            <h4>{{entries['cname'] }}</h4>
+            <p>{{entries['comment'] }}</p>
+            <p>{{entries['datetime']}}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col-xs-10 col-sm-6 col-md-6">
+        <div class="card card-style mb-2">
+            <div class="card-body">
+                <form action="" method="POST">
+                    {{ form.csrf_token() }}
+                    <fieldset class="form-group">
+                        <legend class="mb-4">Post a comment!</legend>
+                        <!-- Comments -->
+                        <div class="form-group">
+                            {{ form.comments.label(class = "form-control-label") }}
+                            {{ form.comments(class = "form-control form-control-sm") }}
+                            {% for error in form.comments.errors %}
+                                    <span style="color: red;">[{{ error }}]</span>
+                            {% endfor %}
+                        </div>
+    
+                        <!-- Submit Button -->
+                        <div class="form-group border-bottom pb-3">
+                            {{ form.submit(class="btn btn-outline-info")}}
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+</div>
+
+
+
+
 
 {% block javascript %}
 <script>
@@ -113,6 +196,7 @@
     let industry_industryName = JSON.parse({{industry_industryName | tojson}})
 
     let vacancy_industry_chart = new Chart(vacancy_industry, {
+            exportEnabled: true,
             type: 'pie',
             data: {
                 labels: industry_industryName,
@@ -147,6 +231,16 @@
             }
             }
         })
+
+        //Export Vacancy Industry  
+        document.getElementById("vacancyExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("vacancy_industry").toDataURL("image/jpg");
+            var a = document.getElementById("vacancyExport");
+            a.href = url_base64jp;
+            
+        });
+
+        //End of Vacancy Industry
 
         let industry_graduates = JSON.parse({{industry_graduates | tojson}})
         let industry_graduates_label = JSON.parse({{industry_graduates_label | tojson}})
@@ -186,6 +280,17 @@
             }
             }
         })
+
+        
+        //Export Vacancy Industry  
+        document.getElementById("gradExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("graduates_industry").toDataURL("image/jpg");
+            var a = document.getElementById("gradExport");
+            a.href = url_base64jp;
+            
+        });
+
+        // End of Industry Graduates 
 
 
         let employment_industry = JSON.parse({{employment_industry | tojson}})
@@ -264,7 +369,15 @@
             }
         })
 
-     
+         //Export Salary Growth
+         document.getElementById("salaryExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("industry_salary").toDataURL("image/jpg");
+            var a = document.getElementById("salaryExport");
+            a.href = url_base64jp;
+            
+        });
+
+        // End of Salary Growth
 
         let industry_year = JSON.parse({{industry_year  | tojson}})
         let industry_unienrolment_industry = JSON.parse({{industry_unienrolment_industry | tojson}})
@@ -405,6 +518,16 @@
             industry_information_chart.update();
         }
 
+         //Export Industry Information
+         document.getElementById("infoExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("industry_information").toDataURL("image/jpg");
+            var a = document.getElementById("infoExport");
+            a.href = url_base64jp;
+            
+        });
+
+        // End of Industry Information
+
         let avg_employmentrate = JSON.parse({{avg_employmentrate | tojson}})
         let avg_salary = JSON.parse({{avg_salary | tojson}})
 
@@ -476,6 +599,17 @@
             }
         })
 
+
+         //Export Emp Rate vs Salary
+         document.getElementById("empsalaryExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("employmentrate_salary").toDataURL("image/jpg");
+            var a = document.getElementById("empsalaryExport");
+            a.href = url_base64jp;
+            
+        });
+
+        // End of Employment Rate vs Salary
+
         let avg_unienrolment_employmentRate = JSON.parse({{avg_unienrolment_employmentRate | tojson}})
         let unienrolment_employment_graduates = JSON.parse({{unienrolment_employment_graduates | tojson}})
 
@@ -545,6 +679,16 @@
             
             }
         })
+
+
+         //Export Emp Rate in Industries 
+         document.getElementById("empgradExport").addEventListener("click",function(){
+            var url_base64jp = document.getElementById("employmentrate_graduates").toDataURL("image/jpg");
+            var a = document.getElementById("empgradExport");
+            a.href = url_base64jp;
+            
+        });
+           // End of Employment Rate in Industries
 </script>
 {% endblock%}
 
