@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 import csv
+import time
 
 from application.form import UploadForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -159,6 +160,7 @@ def update_user(user_id):
             valid_user = User.query.filter_by(username=new_user).first() # query the database for the usernam
             if valid_user is not None:
                 flash("That username is already taken...", 'danger')
+                app.logger.warning(f'Username {new_user} already exists')
                 return redirect(url_for('control_panel'))
 
         # if the values are the same, we can move on.
@@ -166,6 +168,7 @@ def update_user(user_id):
         user.isadmin = request.form['access_lvl']
         db.session.commit()
         flash('The user has been updated.', 'success')
+        app.logger.info(f'Username {orig_user} is changed to {user.username}')
         return redirect(url_for('control_panel'))
 
     return redirect(url_for('control_panel'))
@@ -268,6 +271,7 @@ def register_page():
             db.session.commit()
             login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
             flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
+            app.logger.info(f'{user_to_create.username} has been registered.')
             return redirect(url_for('dashboard'))
         else:
             flash('Please Complete Recaptcha!', category='danger')
@@ -294,6 +298,7 @@ def login_page():
             session["attemptsLogin"] = 0
             timeout(form.username.data)
             flash('EXCEEDED limit for password attempts', category='danger')
+            app.logger.warning(f'{form.username.data} had 10 failed login attempts.')
             return render_template('login.html', form=form)
 
         recaptcha = request.form['g-recaptcha-response']
@@ -400,9 +405,15 @@ def reset_page():
         except:
             flash('You have entered an invalid email address!', category='danger')
             return render_template('reset_email.html', form=form, pub_key=pub_key)
-        password_reset_link(user.email_address)
-        flash('Please check your email for the password reset link.', 'success')
-        return redirect(url_for('login_page'))
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            password_reset_link(user.email_address)
+            flash('Please check your email for the password reset link.', 'success')
+            app.logger.info(f'{user.username} has request for password reset')
+            return redirect(url_for('login_page'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
     return render_template('reset_email.html', form=form, pub_key=pub_key)
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
@@ -908,13 +919,13 @@ def upload():
             # Check if file is a binary or text file
             if check_IfBinaryFile(fullFileName):
                 flash('File is not a csv/txt file')
-                #app.logger.warning('%s uploaded a binary file and not a file containing text data', current_user.username)
+                app.logger.warning('%s uploaded a binary file and not a file containing text data', current_user.username)
                 os.remove(fullFileName)
                 return render_template('uploadDataset.html', form=form)
             # Check if file is empty or file size is too large
             if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
                 flash ("File is either empty or too large")
-                #app.logger.warning('%s uploaded a file that is either empty or too large', current_user.username)
+                app.logger.warning('%s uploaded a file that is either empty or too large', current_user.username)
                 os.remove(fullFileName)
             else:
                 # Check if data format in CSV/txt file follows a certain format
@@ -922,11 +933,12 @@ def upload():
                     return insertDataset(fullFileName)
                 else:
                     flash ("CSV File format is incorrect", category='danger')
-                    #app.logger.warning('%s uploaded a file that does not follow dataset format', current_user.username)
+                    app.logger.warning('%s uploaded a file that does not follow dataset format', current_user.username)
                     os.remove(fullFileName)
         else:
-            #app.logger.warning('%s uploaded a file whose size is either too big or file whose extension is not allowed', current_user.username)
             flash('File size is either too big or file extension is not allowed', category='danger')
+            app.logger.warning('%s uploaded a file whose size is either too big or file whose extension is not allowed', 
+            current_user.username)
     return render_template('uploadDataset.html', form=form)
 def insertDataset(fullFileName):
     # CVS Column Names
@@ -949,15 +961,15 @@ def insertDataset(fullFileName):
     except:
         # Remove file after unsuccessful data upload
         os.remove(fullFileName)
-        #app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
+        app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         return redirect(url_for('control_panel'))
     
     db.session.close()
     # Remove file after successful data upload
     os.remove(fullFileName)
-    #app.logger.warning('%s successfully uploaded dataset into database', current_user.username)
     flash('Dataset Successfully uploaded')
+    app.logger.info('%s successfully uploaded dataset into database', current_user.username)
     return redirect(url_for('control_panel'))
 
 
