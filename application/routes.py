@@ -2,15 +2,16 @@
 import requests
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 import os
 from os import write
 
 import re
 from xmlrpc.client import DateTime
 from application import app
-from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session
+from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session, escape, Markup
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
-from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EnrolmentDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
+from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
 from application import db
 import json
 from flask_login import login_user, logout_user, login_required, current_user
@@ -24,6 +25,8 @@ from flask_bcrypt import Bcrypt
 from functools import wraps
 from dotenv import load_dotenv
 import os
+import pandas as pd
+import csv
 
 from application.form import UploadForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -39,7 +42,7 @@ from io import StringIO
 import csv
 from csv import writer
 
-ALLOWED_EXTENSIONS = {'txt', 'csv'}
+ALLOWED_EXTENSIONS = {'csv', 'txt'}
 script_dir = os.path.dirname(__file__)
 rel_path = "..\\tempFileUploadDir\\"
 UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
@@ -54,6 +57,8 @@ load_dotenv('data.env')
 pub_key = os.environ.get("pub_key")
 secret = os.environ.get("private_key")
 
+# readData = pd.read_csv('flask-web-log.csv')
+# readData.to_csv('flask-web-log.csv', index=None)
 
 def is_human(catpcha_response):
     payload = {'response': catpcha_response, 'secret': secret }
@@ -106,7 +111,6 @@ def requires_access_level(access_level):
             #user = User.query.filter_by(id=current_user.id).first()
 
             if not current_user.allowed(access_level):
-                flash('You do not have access to this resource.', 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
@@ -251,6 +255,8 @@ def industry2():
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     form = RegisterForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         recaptcha = request.form['g-recaptcha-response']
         #success = is_human(recaptcha)
@@ -261,7 +267,7 @@ def register_page():
                                 password=form.password1.data, isadmin=0, istimeout=0)
             db.session.add(user_to_create)
             db.session.commit()
-            login_user(user_to_create)
+            login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
             flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
             return redirect(url_for('dashboard'))
         else:
@@ -277,11 +283,12 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     form = LoginForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         if not session.get("attemptsLogin"):
             session["attemptsLogin"] = 0
         attemptsLogin = session['attemptsLogin']
-        print(session['attemptsLogin']) 
         while attemptsLogin > 10:
              #timeout if fail more than 10 attempts
             session.pop('attemptsLogin', None)
@@ -301,7 +308,6 @@ def login_page():
                 if attempted_user.istimeout == 1:
                     currTime = datetime.now()
                     diff = (currTime - attempted_user.timeouttime).total_seconds()/60 #in minutes
-                    print(diff)
                     if diff >= 5 :
                         #update db
                         removeTimeout(attempted_user)
@@ -331,17 +337,20 @@ def login_page():
                 attemptsLogin = attemptsLogin+1
                 session['attemptsLogin'] = attemptsLogin
                 flash('Username and password are not match! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {form.username.data}')
         else:
             flash('Please Complete Recaptcha!', category='danger')
     return render_template('login.html', form=form, pub_key=pub_key)
+        
 
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
     form = OTPForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if not session.get("attemptsOTP"):
         session["attemptsOTP"] = 0
     attemptsOTP = session['attemptsOTP']
-    print(attemptsOTP)
     if request.method == "GET":
         while attemptsOTP <= 5:
             return render_template('verify.html', form=form)
@@ -371,13 +380,17 @@ def verify_page():
                 session['attemptsOTP'] = 0 #might need reset to 0 if success.
                 username = session['username']
                 attempted_user = User.query.filter_by(username=username).first()
-                login_user(attempted_user)
+                login_user(attempted_user,remember=True,duration=timedelta(seconds=600))
                 flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
+                app.logger.info(f'Successful login from {attempted_user.username}')
                 return redirect(url_for('dashboard'))
             else:
+                username = session['username']
+                attempted_user = User.query.filter_by(username=username).first()
                 attemptsOTP = attemptsOTP+1
                 session['attemptsOTP'] = attemptsOTP
                 flash('Invalid OTP! Please try again', category='danger')
+                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
                 return render_template('verify.html', form=form)
         else:
             flash("Please enter OTP!", category='danger' )
@@ -387,19 +400,23 @@ def verify_page():
 @app.route('/reset_email', methods=['GET', 'POST'])
 def reset_page():
     form = EmailResetForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         try:
             user = User.query.filter_by(email_address=form.email_address.data).first_or_404()
         except:
             flash('You have entered an invalid email address!', category='danger')
-            return render_template('reset_email.html', form=form)
+            return render_template('reset_email.html', form=form, pub_key=pub_key)
         password_reset_link(user.email_address)
         flash('Please check your email for the password reset link.', 'success')
         return redirect(url_for('login_page'))
-    return render_template('reset_email.html', form=form)
+    return render_template('reset_email.html', form=form, pub_key=pub_key)
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
 def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     try:
         password_reset_serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         email_address = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=300)
@@ -420,6 +437,7 @@ def reset_password(token):
         db.session.add(user)
         db.session.commit()
         flash('Your password has been updated!', 'success')
+        
         return redirect(url_for('login_page'))
 
     return render_template('password_reset.html',token=token, form=form)
@@ -573,7 +591,6 @@ def download():
 
 
     for u in emp:
-        print ()
         invalid = {"_sa_instance_state","geid"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
@@ -596,7 +613,6 @@ def download1():
     writer = csv.writer(output)
 
     for u in ind:
-        print ()
         invalid = {"_sa_instance_state","industryId"}
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
@@ -824,10 +840,25 @@ def check_IfAllowedFile(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def try_utf8(data):
+    "Returns a Unicode object on success, or None on failure"
+    try:
+       return data.decode('utf-8')
+    except UnicodeDecodeError:
+       return None
+
 def check_IfEmpty(file):
-    content = open(file, 'r').read()
-    if re.search(r'^\s*$', content):
-        return True
+    try:
+        content = open(file, 'r').read()
+        if re.search(r'^\s*$', content):
+            return True
+        udata = try_utf8(content)
+        if udata is None:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 def check_IfBinaryFile(filepathname):
     textchars = bytearray([7,8,9,10,12,13,27]) + bytearray(range(0x20, 0x7f)) + bytearray(range(0x80, 0x100))
@@ -843,7 +874,7 @@ def check_FileData(filename):
         file = open(filename, 'r')
         lines = file.readlines()
         for line in lines:
-            if not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
+            if not line.isspace() and not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
                 return False
         return True
     except:
@@ -909,7 +940,7 @@ def insertDataset(fullFileName):
     # CVS Column Names
     col_names = ['year','schoolName','degName','employmentRate','salary','industry']
     # Use Pandas to parse the CSV file
-    csvData = pd.read_csv(fullFileName, names=col_names, header=None)
+    csvData = pd.read_csv(fullFileName, names=col_names, header=None).dropna()
     
     # Try insert data from csv into dataset and catch if dataset cannot be inserted
     try:
@@ -984,3 +1015,16 @@ def removeTimeout(attempted_user):
     attempted_user.timeouttime = None
     db.session.commit()
 
+@app.route('/logs')
+@login_required
+@requires_access_level(ACCESS['admin'])
+def logs():
+    loadData = pd.read_csv('flask-web-log.csv')
+    return render_template('logs.html', tables=[loadData.to_html()], titles=[''])
+
+@app.route("/logs/new_log")
+@login_required
+@requires_access_level(ACCESS['admin'])
+def newlogs():
+    with open('web.log', 'r') as f:
+        return render_template('new_log.html', text=f.read())

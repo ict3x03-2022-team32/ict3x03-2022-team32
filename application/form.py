@@ -1,15 +1,16 @@
 from xmlrpc.client import DateTime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
-from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError
+from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError, Regexp, InputRequired
 from application.models import User
-
+import re 
+import bleach
 #For my (YX) file upload
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
-    username = StringField(label='User Name:', validators=[DataRequired()])
-    password = PasswordField(label='Password:', validators=[DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=20),DataRequired()])
+    password = PasswordField(label='Password:', validators=[Length(min=8),DataRequired()])
     submit = SubmitField(label='Sign in')
 
 
@@ -30,9 +31,24 @@ class Form(FlaskForm):
     colour = SelectField('colour',choices=[])
 
 class MessageDataForm(FlaskForm):
-    comments = StringField(label='Comments: ', validators=[DataRequired()])
+    def xss_validate_comment(self, comments):
+        regex = "(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)"
+        match = re.search(regex, comments.data)
+        if match:
+            raise ValidationError("No script tag allowed")
+        
+    def sql_code_validate(self, comments):
+        regex="('(''|[^'])*')|(;)|(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)"
+        match = re.search(regex, comments.data)
+        if match:
+            raise ValidationError()
+        
+    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate])
     submit = SubmitField('Post Comment')
-
+    
+   
+    
+    
 
 
 class RegisterForm(FlaskForm):
@@ -46,9 +62,9 @@ class RegisterForm(FlaskForm):
         if email_address:
             raise ValidationError('Email Address already exists! Please try a different email address')
 
-    username = StringField(label='User Name:', validators=[Length(min=2, max=30), DataRequired()])
-    email_address = StringField(label='Email Address:', validators=[Email(), DataRequired()])
-    password1 = PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
+    email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+    password1 = PasswordField(label='Password:', validators=[Length(min=8), DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'), DataRequired()])
     isadmin = IntegerField(label="Access :")
     submit = SubmitField(label='Create Account')
@@ -98,25 +114,15 @@ class IndustryDataForm(FlaskForm):
     year = SelectField('Year', validators=[DataRequired()],choices=['2015', '2016','2017', '2018','2019'])
     submit = SubmitField('Generate Data')
 
-class EnrolmentDataForm(FlaskForm):
-    industryName = SelectField("Industry", validators=[DataRequired()],
-                                            choices =['ICT', 'Healthcare',
-                                            'Engineering', 'Business',
-                                            'Arts'
-                                            ]
-                            )
-    
-    year = SelectField('Year', validators=[DataRequired()],choices=['2015', '2016','2017', '2018','2019'])
-    intake = IntegerField('Intake', validators = [DataRequired()])
-    enrolment = IntegerField('Enrolment', validators = [DataRequired()])
-    graduates = IntegerField('Graduates', validators = [DataRequired()])
-    submit = SubmitField('Generate Data')             
+         
 
 class EmailResetForm(FlaskForm):
     email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+    submit = SubmitField(label="Submit Email")
 
 class PasswordResetForm(FlaskForm):
-    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])                                        
+    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])    
+    submit = SubmitField(label="Submit Password")                                    
 
 class UploadForm(FlaskForm):
         upload = FileField('CSV and TXT only!', validators=[

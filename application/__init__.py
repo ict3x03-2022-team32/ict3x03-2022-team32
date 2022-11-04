@@ -1,11 +1,13 @@
-from flask import Flask
+from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from urllib.parse import quote
 from dotenv import load_dotenv
+import logging
+from flask_web_log import Log
 import os
-
+import csv
 load_dotenv('data.env')
 
 db_key = os.environ.get("db_key")
@@ -15,6 +17,12 @@ email = os.environ.get("mail_email")
 pwd = os.environ.get("mail_pwd")
 
 app = Flask(__name__)
+
+logging.basicConfig(filename = 'web.log', level=logging.DEBUG, 
+format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+
+app.config["LOG_TYPE"] = "CSV"
+Log(app)
 app.config['SECRET_KEY'] = db_key
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenseDB.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = (db_username % quote(db_pwd))

@@ -1,0 +1,120 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Logs page
+{% endblock %}
+{% block content %}
+<style>
+ .table-responsive{
+    width: 100%;
+    margin-bottom: 50px;
+    margin-top: 20px;
+    margin-left: 100px;
+    margin-right: 100px;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    text-align: center;
+    border: 5px solid black;
+}    
+th{
+    text-align: center;
+    border: 2px solid white;
+    background-color: black;
+    color: white;
+    height: 50px;
+
+}
+td{
+    text-align: center;
+    border: 2px solid rgb(0, 0, 0);
+}
+.audit{
+    text-align: center;
+    margin-right: 65px;
+    font-weight: bold;
+}
+</style>
+
+<html lang="en">
+    <head>
+        <title> Audit logs </title>              
+    </head>
+    <body>
+        <div class="audit">
+            <h1>
+                Audit Logs
+            </h1>
+            <a href="{{ url_for('newlogs') }}">
+                <button>Severity logs</button>
+            </a>
+            
+        </div>
+        <div class="table-responsive">
+            <!-- <table class="table"> 
+                <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Src_ip</th>
+                      <th>Useragent</th>
+                      <th>Connection</th>
+                      <th>HTTP_method</th>
+                      <th>Request_Scheme</th>
+                      <th>HTTP_status</th>
+                      <th>Dest_host</th>
+                      <th>URL</th>
+                      <th>URL_path</th>
+                      <th>Mimetype</th>
+                      <th>Content_type</th>
+                      <th>URL_query</th>
+                      <th>Cookies</th>
+                      <th>Data</th>
+                      <th>Referrer</th>
+                      <th>Authorisation</th>
+                      <th>Duration</th>
+                      <th>Request_id</th>
+                      <th>User</th>
+                      <th>Dest_port</th>
+                      <th>Content_md5</th>
+                    </tr>
+                </thead>
+                <tbody> 
+                    {% for value in loadNewData%} 
+                    <tr> 
+                    <td>{{ value[0] }}</td> 
+                    <td>{{ value[1] }}</td> 
+                    <td>{{ value[2] }}</td> 
+                    <td>{{ value[3] }}</td> 
+                    <td>{{ value[4] }}</td> 
+                    <td>{{ value[5] }}</td> 
+                    <td>{{ value[6] }}</td> 
+                    <td>{{ value[7] }}</td> 
+                    <td>{{ value[8] }}</td> 
+                    <td>{{ value[9] }}</td> 
+                    <td>{{ value[10] }}</td> 
+                    <td>{{ value[11] }}</td> 
+                    <td>{{ value[12] }}</td> 
+                    <td>{{ value[13] }}</td> 
+                    <td>{{ value[14] }}</td> 
+                    <td>{{ value[15] }}</td> 
+                    <td>{{ value[16] }}</td> 
+                    <td>{{ value[17] }}</td> 
+                    <td>{{ value[18] }}</td> 
+                    <td>{{ value[19] }}</td> 
+                    <td>{{ value[20] }}</td> 
+                    <td>{{ value[21] }}</td> 
+                    </tr> 
+                    {% endfor %} 
+                </tbody> -->
+                <table>
+                    <h1>
+                    <!--Displaying the converted table-->
+                         {% for table in tables %}
+                        <h2>{{titles[loop.index]}}</h2>                            
+                        {{ table|safe }}
+                        {% endfor %}     
+                    </h1> 
+                </table>
+        </div>
+
+    </body>
+</html>
+{% endblock %}
