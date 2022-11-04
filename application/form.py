@@ -1,9 +1,10 @@
 from xmlrpc.client import DateTime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SubmitField, IntegerField, PasswordField, EmailField
-from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError, Regexp
+from wtforms.validators import DataRequired, Length, EqualTo, Email, DataRequired, ValidationError, Regexp, InputRequired
 from application.models import User
-
+import re 
+import bleach
 #For my (YX) file upload
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
@@ -30,9 +31,24 @@ class Form(FlaskForm):
     colour = SelectField('colour',choices=[])
 
 class MessageDataForm(FlaskForm):
-    comments = StringField(label='Comments: ', validators=[DataRequired()])
+    def xss_validate_comment(self, comments):
+        regex = "(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)"
+        match = re.search(regex, comments.data)
+        if match:
+            raise ValidationError("No script tag allowed")
+        
+    def sql_code_validate(self, comments):
+        regex="('(''|[^'])*')|(;)|(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)"
+        match = re.search(regex, comments.data)
+        if match:
+            raise ValidationError()
+        
+    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate])
     submit = SubmitField('Post Comment')
-
+    
+   
+    
+    
 
 
 class RegisterForm(FlaskForm):

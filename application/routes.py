@@ -9,7 +9,7 @@ from os import write
 import re
 from xmlrpc.client import DateTime
 from application import app
-from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session
+from flask import render_template, url_for, redirect,flash, get_flashed_messages, request, Response, session, escape, Markup
 from application.models import DecimalEncoder, employment, IncomeExpenses, User, Degree, University, industry, unienrolment, comments, load_user
 from application.form import OTPForm, UserDataForm, RegisterForm, LoginForm, Form, EmploymentDataForm, IndustryDataForm, EmailResetForm, PasswordResetForm, UserDetailForm, MessageDataForm, OTPForm
 from application import db
