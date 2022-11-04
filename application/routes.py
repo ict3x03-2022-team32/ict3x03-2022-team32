@@ -964,12 +964,11 @@ def insertDataset(fullFileName):
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
         app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         return redirect(url_for('control_panel'))
-    
+    app.logger.info('%s successfully uploaded dataset into database', current_user.username)
     db.session.close()
     # Remove file after successful data upload
     os.remove(fullFileName)
     flash('Dataset Successfully uploaded')
-    app.logger.info('%s successfully uploaded dataset into database', current_user.username)
     return redirect(url_for('control_panel'))
 
 
