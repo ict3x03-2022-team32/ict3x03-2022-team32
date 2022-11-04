@@ -8,8 +8,6 @@
     width: 100%;
     margin-bottom: 50px;
     margin-top: 20px;
-    margin-left: 100px;
-    margin-right: 100px;
     overflow-y: hidden;
     -ms-overflow-style: -ms-autohiding-scrollbar;
     text-align: center;
@@ -27,28 +25,20 @@ td{
     text-align: center;
     border: 2px solid rgb(0, 0, 0);
 }
-.audit{
-    text-align: center;
-    margin-right: 65px;
-    font-weight: bold;
-}
+
 </style>
 
 <html lang="en">
     <head>
-        <title> Audit logs </title>              
+        <title> Audit Logs </title>              
     </head>
     <body>
-        <div class="audit">
-            <h1>
-                Audit Logs
-            </h1>
+        <div class="col-sm-10 ml-auto mr-auto ">
+            <h1>Audit Logs (Web logs)</h1>
             <a href="{{ url_for('newlogs') }}">
                 <button>Severity logs</button>
             </a>
-            
-        </div>
-        <div class="table-responsive">
+            <div class="table-responsive">
             <!-- <table class="table"> 
                 <thead>
                     <tr>
@@ -113,8 +103,8 @@ td{
                         {% endfor %}     
                     </h1> 
                 </table>
+            </div>
         </div>
-
     </body>
 </html>
 {% endblock %}
