@@ -182,6 +182,7 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
         flash('User has been deleted.', 'success')
+        app.logger.info(f'The user, {user.username}, has been deleted')
         return redirect(url_for('control_panel'))
 
     return redirect(url_for('control_panel'))
@@ -298,7 +299,7 @@ def login_page():
             session["attemptsLogin"] = 0
             timeout(form.username.data)
             flash('EXCEEDED limit for password attempts', category='danger')
-            app.logger.warning(f'{form.username.data} had 10 failed login attempts.')
+            app.logger.warning(f'{form.username.data} had more than 10 failed login attempts.')
             return render_template('login.html', form=form, pub_key=pub_key)
 
         recaptcha = request.form['g-recaptcha-response']
@@ -598,6 +599,7 @@ def download():
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning('%s downloaded a copy of the employment data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employment_report.csv"})
 
 
@@ -620,6 +622,7 @@ def download1():
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning('%s downloaded a copy of the industry data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=industry_report.csv"})
 
 
