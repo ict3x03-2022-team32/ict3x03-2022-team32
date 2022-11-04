@@ -8,7 +8,9 @@ import pytest
 import time 
 
 #selenium libraries
+import undetected_chromedriver.v2 as uc
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -18,7 +20,7 @@ import speech_recognition as sr
 #import ffmpy
 import requests
 import urllib
-#import pydub
+import pydub
 
 
 load_dotenv('data.env')
@@ -78,10 +80,88 @@ def test_register_page_username():
     driver.find_element(By.ID, "submit").click()
     checkifmessageexist = driver.find_element(By.XPATH, invalidXPATH)
     assert checkifmessageexist == '[Invalid input.]'
-
+'''
+    
+def recaptcha(driver):
+    #switch to recaptcha frame
+    #frames = driver.find_elements_by_tag_name("iframe")
+    frames = driver.find_element(By.TAG_NAME, "iframe")
+    driver.switch_to.frame(frames)
+    #driver.switch_to.frame(frames[0])
+    delay()
     
 
-'''
+    #click on checkbox to activate recaptcha
+    driver.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
+
+
+    # switch to recaptcha audio control frame
+    delay()
+    driver.switch_to.default_content()
+    #frames = driver.find_elements_by_xpath("/html/body/div[2]/div[4]").find_elements_by_tag_name("iframe")
+    try:
+        frames = driver.find_element(By.XPATH,"/html/body/div[2]/div[4]")
+        s=frames.text
+    except NoSuchElementException:
+        return True
+    frames2 = frames.find_elements(By.TAG_NAME,"iframe")
+    driver.switch_to.frame(frames2[0])
+    delay()
+
+    #Click on audio challenge
+    driver.find_element(By.ID,"recaptcha-audio-button").click()
+
+    #switch to recaptcha audio challenge frame
+    delay()
+    driver.switch_to.default_content()
+    frames=driver.find_element(By.TAG_NAME,"iframe")
+    #driver.switch_to.frame(frames[-1])
+    driver.switch_to.frame(frames)
+    
+
+    #click on play button
+    delay()
+    driver.find_elements(By.XPATH,"/html/body/div/div/div[3]/div/button").click()
+
+    #Get the mp3 audio file
+    delay()
+    src = driver.find_element(By.ID,"audio-source").get_attribute("src")
+    print(f"[INFO] Audio src: {src}")
+    path_to_mp3 = os.path.normpath(os.path.join(os.getcwd(), "sample.mp3"))
+    path_to_wav = os.path.normpath(os.path.join(os.getcwd(), "sample.wav"))
+
+    #download the mp3 audio file from the source
+    urllib.request.urlretrieve(src, path_to_mp3)
+
+    #load downloaded mp3 audio file as .wav
+    sound = pydub.AudioSegment.from_mp3(path_to_mp3)
+    sound.export(path_to_wav, format="wav")
+    sample_audio = sr.AudioFile(sr.AudioFile(path_to_wav))
+    delay()
+
+    # translate audio to text with google voice recognition
+    r = sr.Recognizer()
+    with sample_audio as source:
+        audio = r.record(source)
+
+    key=r.recognize_google(audio)
+    print("[INFO] Recaptcha Passcode: %s" %key)
+
+    #key in results and submit
+    driver.find_element(By.ID,"audio-response").send_keys(key.lower())
+    driver.find_element(By.ID,'audio-response').send_keys(Keys.ENTER)
+
+    time.sleep(5)
+    driver.switch_to.default_content()
+    time.sleep(5)
+    driver.find_element(By.ID, "recaptcha-demo-submit").click()
+    return True
+
+
+
+
+
+
 def test_login_page():
     """
     GIVEN the index page
@@ -90,9 +170,12 @@ def test_login_page():
     """
     chrome_options = Options()
     chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36')
+    #chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36')
     #driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
     #driver = webdriver.Chrome(options=chrome_options)
-    driver = webdriver.Chrome(options=chrome_options, executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    #driver = webdriver.Chrome(options=chrome_options, executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+    driver=uc.Chrome()
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -102,65 +185,21 @@ def test_login_page():
     assert title == driver.title
     delay()
 
+    recaptcha(driver)
     
-    #switch to recaptcha frame
-    #frames = driver.find_elements_by_tag_name("iframe")
-    frames = driver.find_element(By.TAG_NAME, "iframe")
-    driver.switch_to.frame(frames)
-    #driver.switch_to.frame(frames[0])
-    delay()
-    
-
-    #clcik on checkbox to activate recaptcha
-    driver.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
-
-    # switch to recaptcha audio control frame
-    delay()
-    driver.switch_to.default_content()
-    #frames = driver.find_elements_by_xpath("/html/body/div[2]/div[4]").find_elements_by_tag_name("iframe")
-    frames = driver.find_element(By.XPATH,"/html/body/div[2]/div[4]")
-    frames2 = frames.find_elements(By.TAG_NAME,"iframe")
-    driver.switch_to.frame(frames2[0])
-    delay()
-
-    #Click on audio challenge
-    driver.find_element(By.ID,"recaptcha-audio-button").click()
-
-    #switch to recaptcha audio challenge frame
-    driver.switch_to.default_content()
-    frames=driver.find_element(By.TAG_NAME,"iframe")
-    #driver.switch_to.frame(frames[-1])
-    driver.switch_to.frame(frames[-1])
-    delay()
-
-    #click on play button
-    driver.find_elements(By.XPATH,"/html/body/div/div/div[3]/div/button").click()
-
-    #get the mp3 audio file
-    src = driver.find_element(By.ID, "audio-source").get_attribute("src")
-    print ("[INFO] Audio src: %s"%src)
-    #download the mp3 audio file from the source
-    urllib.request.urlretrieve(src, os.getcwd()+"\\sample.mp3")
-    sound = pydub.AudioSegment.from_mp3(os.getcwd()+"\\sample.mp3")
-    sound.export(os.getcwd()+"\\sample.wav", format="Wav")
-    sample_audio = sr.AudioFile(os.getcwd()+"\\sample.wav")
-    r = sr.Recognizer()
-    with sample_audio as source:
-        audio = r.record(source)
-    
-    #translate audio to text with google voice recognition
-    key=r.recognize_google(audio)
-    print("[INFO] Recaptcha Passcode: %s" %key)
-
-    #key in results and submit
-    driver.find_element(By.ID,"audio-response").send_keys(key.lower())
-    driver.find_element(By.ID,'audio-response').send_keys(Keys.ENTER)
 
     #yield
     delay()
     driver.quit()
 
+
+
+
+
+
 '''
+
+
 def test_index_page(client):
     """
     GIVEN the index page
