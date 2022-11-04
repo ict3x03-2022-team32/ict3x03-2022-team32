@@ -26,11 +26,11 @@ def delay():
     time.sleep(random.randint(2,3))
 
 
-def test_login_page_usernameField():
+def test_login_page_WrongUsernameField():
     """
     #GIVEN the login page
-    #WHEN the '/login' page is requested (GET) and a wrong username is input
-    #THEN check that the response is valid and the user is redirected to the dashboard page
+    #WHEN the '/login' page is requested (POST) with a invalid username and a valid password is send
+    #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
     driver=uc.Chrome()
@@ -57,21 +57,236 @@ def test_login_page_usernameField():
     driver.find_element(By.ID,"submit").click()
     delay()
 
+    #Check if user received an error message
+    fail = driver.find_element(By.XPATH, "//div[@class='alert alert-danger']").get_attribute("textContent")
+    assert fail[33:86] == "Username and password are not match! Please try again"
+    delay()
+
     #Check if user is in Dashboard page
+    try:
+        driver.find_element(By.XPATH, "//a[@class='nav-link']")
+        not_found = False
+    except:
+        not_found = True
 
-    #look for success notification
-    #success = driver.find_element(By.CLASS_NAME, "alert alert-success").text
-    #assert success[0-29] == "Success! You are logged in as:"
-
-    #time.sleep(random.randint(4,5))
-    #success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("innertext")
-    success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
-    success = success[33:64]
-    assert success == "Success! You are logged in as: "
+    assert not_found
 
     #yield
     delay()
     driver.quit()
+
+def test_login_page_WrongPasswordField():
+    """
+    #GIVEN the login page
+    #WHEN the '/login' page is requested (POST) with a correct username and a wrong password is send
+    #THEN check that the response is valid and the user is prompt an error message and not logged in
+    """
+
+    driver=uc.Chrome()
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/login")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+
+    #recaptcha(driver)
+
+    #Input a valid User Name
+    user_name = driver.find_element(By.ID,"username")
+    user_name.send_keys(testuser)
+
+    #Input a invalid Password
+    password = driver.find_element(By.ID,"password")
+    password.send_keys('testingincorrectpassword')
+    delay()
+
+    #Click Sign in button
+    driver.find_element(By.ID,"submit").click()
+    delay()
+
+    #Check if user received an error message
+    fail = driver.find_element(By.XPATH, "//div[@class='alert alert-danger']").get_attribute("textContent")
+    assert fail[33:86] == "Username and password are not match! Please try again"
+    delay()
+
+    #Check if user is in Dashboard page
+    try:
+        driver.find_element(By.XPATH, "//a[@class='nav-link']")
+        not_found = False
+    except:
+        not_found = True
+
+    assert not_found
+
+    #yield
+    delay()
+    driver.quit()
+'''
+def test_login_page_InvalidPasswordField():
+    """
+    #GIVEN the login page
+    #WHEN the '/login' page is requested (GET) and a invalid password is input (Lower characters than min allowed password length)
+    #THEN check that the response is valid and the user is prompt an error message and not logged in
+    """
+
+    driver=uc.Chrome()
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/login")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+
+    #recaptcha(driver)
+
+    #Input a valid User Name
+    user_name = driver.find_element(By.ID,"username")
+    user_name.send_keys(testuser)
+
+    #Input a invalid Password
+    password = driver.find_element(By.ID,"password")
+    password.send_keys('adadw')
+    delay()
+
+    #Click Sign in button
+    driver.find_element(By.ID,"submit").click()
+    delay()
+
+    #Check if user received an error message
+    fail = driver.find_element(By.XPATH, "//div[@class='alert alert-danger']").get_attribute("textContent")
+    assert fail[33:86] == "Username and password are not match! Please try again"
+    delay()
+
+    #Check if user is in Dashboard page
+    try:
+        driver.find_element(By.XPATH, "//a[@class='nav-link']")
+        not_found = False
+    except:
+        not_found = True
+
+    assert not_found
+
+    #yield
+    delay()
+    driver.quit()
+'''
+def test_register_page_InvalidUsernameField():
+    """
+    #GIVEN the register page
+    #WHEN the '/register' page is requested (POST) and a invalid username is input
+    #THEN check that the response is valid and the user is not redirected to the dashboard page
+    """
+
+    driver=uc.Chrome()
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/register")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+
+    #recaptcha(driver)
+
+    #Input a Invalid User Name
+    user_name = driver.find_element(By.ID,"username")
+    user_name.send_keys("<script/src=//Ǌ.₨></script>")
+
+    #input valid Email
+    email = driver.find_element(By.ID,"email_address")
+    email.send_keys(testregisteruser + "@" +testregisteruser + ".com")
+
+    #Input valid Password
+    password = driver.find_element(By.ID,"password1")
+    password.send_keys(testpassword)
+
+    #Input valid Confirm Password
+    password = driver.find_element(By.ID,"password2")
+    password.send_keys(testpassword)
+
+    #Click Sign in button
+    delay()
+    driver.find_element(By.ID,"submit").click()
+    delay()
+
+    #Check if user received an error message
+    fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span").get_attribute("textContent")
+    assert fail == "[Invalid input.]"
+    delay()
+
+    #Check if user is in Dashboard page
+    try:
+        driver.find_element(By.XPATH, "//a[@class='nav-link']")
+        not_found = False
+    except:
+        not_found = True
+
+    assert not_found
+
+    #yield
+    delay()
+    driver.quit()
+
+def test_register_page_InvalidPasswordField():
+    """
+    #GIVEN the register page
+    #WHEN the '/register' page is requested (POST) and a invalid password and confirm password is input
+    #THEN check that the response is valid and the user is not redirected to the dashboard page
+    """
+
+    driver=uc.Chrome()
+    driver.implicitly_wait(10)
+    driver.maximize_window()
+    driver.get("http://localhost:5000/register")
+
+    #Check title
+    title = "Data Analytics for Salary in Industries of Singapore"
+    assert title == driver.title
+
+    #recaptcha(driver)
+
+    #Input a Valid User Name
+    user_name = driver.find_element(By.ID,"username")
+    user_name.send_keys(testregisteruser)
+
+    #input valid Email
+    email = driver.find_element(By.ID,"email_address")
+    email.send_keys(testregisteruser + "@" +testregisteruser + ".com")
+
+    #Input Invalid Password
+    password = driver.find_element(By.ID,"password1")
+    password.send_keys('abcd')
+
+    #Input Invalid Confirm Password
+    password = driver.find_element(By.ID,"password2")
+    password.send_keys('abcd')
+
+    #Click Sign in button
+    delay()
+    driver.find_element(By.ID,"submit").click()
+    delay()
+
+    #Check if user received an error message
+    fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span").get_attribute("textContent")
+    assert fail == "[Invalid input.]"
+    delay()
+
+    #Check if user is in Dashboard page
+    try:
+        driver.find_element(By.XPATH, "//a[@class='nav-link']")
+        not_found = False
+    except:
+        not_found = True
+
+    assert not_found
+
+    #yield
+    delay()
+    driver.quit()
+
 '''
 def test_register_page():
     """
@@ -79,13 +294,7 @@ def test_register_page():
     #WHEN the user information input to create account is valid (POST)
     #THEN check that the response is valid and the new user account is created and is redirected to the dashboard page
     """
-    chrome_options = Options()
-    #chrome_options.add_argument("--disable-extensions")
-    #chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36')
-    #chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36')
-    #driver = webdriver.Chrome(executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
-    #driver = webdriver.Chrome(options=chrome_options)
-    #driver = webdriver.Chrome(options=chrome_options, executable_path="C:\\Users\\RH\\Desktop\\chromedriver_win32\\chromedriver.exe")
+
     driver=uc.Chrome()
     driver.implicitly_wait(10)
     driver.maximize_window()
