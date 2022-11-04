@@ -18,7 +18,8 @@ pipeline {
 					    sh 'python3 --version'
 					    sh 'python3 -m pytest'
 			      }
-	}	
+   	}
+  }
 	post {
 		      success {
 			      dependencyCheckPublisher pattern: 'dependency-check-report.xml'
