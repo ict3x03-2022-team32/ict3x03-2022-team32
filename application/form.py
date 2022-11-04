@@ -9,7 +9,7 @@ import bleach
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
-    username = StringField(label='User Name:', validators=[Length(min=2, max=20),DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
     password = PasswordField(label='Password:', validators=[Length(min=8),DataRequired()])
     submit = SubmitField(label='Sign in')
 
