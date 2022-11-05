@@ -991,40 +991,6 @@ def insertDataset(fullFileName):
     return redirect(url_for('control_panel'))
 
 
-
-@app.route('/download/report/csv', methods=['GET'])
-# @login_required
-# @rbac.allow(['administrator'], methods=['GET'])
-@limiter.limit("30/minute")
-def download_report():
-	conn = None
-	cursor = None
-	try:
-		conn = db.connect()
-		cursor = conn.cursor(pymysql.cursors.DictCursor)
-		
-		cursor.execute("SELECT year,schooName,degName, employmentRate, salary, industry FROM employment")
-		result = cursor.fetchall()
-
-		output = io.StringIO()
-		writer = csv.writer(output)
-		
-		line = ['year,schooName,degName, employmentRate, salary, industry']
-		writer.writerow(line)
-
-		for row in result:
-			line = [str(row['year']),row['schooName'],row['degName'], str(row['employmentRate']), str(row['salary']), row['industry']]
-			writer.writerow(line)
-
-		output.seek(0)
-		#app.logger.warning('%s downloaded a copy of the data from the database', current_user.username)
-		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
-	except Exception as e:
-		print(e)
-	finally:
-		cursor.close() 
-		conn.close()
-
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return 'File Too Large', 413
