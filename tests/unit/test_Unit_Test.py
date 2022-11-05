@@ -46,6 +46,8 @@ def test_login_page_InvalidUsernameField():
     #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage')
+    option.add_argument('--disable-gpu')
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     
@@ -114,6 +116,8 @@ def test_login_page_WrongPasswordField():
     #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage')
+    option.add_argument('--disable-gpu')
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
@@ -181,13 +185,15 @@ def test_login_page_InvalidPasswordField():
     #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
-    driver.get("https://securitycrusaders.live/login")
-    #driver.get("http://localhost:5000/login")
+    #driver.get("https://securitycrusaders.live/login")
+    driver.get("http://localhost:5000/login")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -268,6 +274,8 @@ def test_register_page_InvalidUsernameField():
     #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
@@ -360,13 +368,16 @@ def test_register_page_InvalidEmailField():
     #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
-    driver.get("http://localhost:5000/register")
     #driver.get("https://securitycrusaders.live/register")
+    driver.get("http://localhost:5000/register")
+    
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
