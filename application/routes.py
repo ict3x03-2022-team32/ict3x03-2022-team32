@@ -594,6 +594,7 @@ def delete3(entry_id):
 
 
 @app.route('/download/report/csv')
+@requires_access_level(ACCESS['admin'])
 @login_required
 @limiter.limit("30/minute")
 def download():
@@ -620,6 +621,7 @@ def download():
 
 
 @app.route('/download1/report/csv')
+@requires_access_level(ACCESS['admin'])
 @limiter.limit("30/minute")
 @login_required
 def download1():
