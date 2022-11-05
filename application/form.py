@@ -35,15 +35,15 @@ class MessageDataForm(FlaskForm):
         regex = "(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)"
         match = re.search(regex, comments.data)
         if match:
-            raise ValidationError("No script tag allowed")
+            raise ValidationError("Invalid comment. Please try again")
         
     def sql_code_validate(self, comments):
         regex="('(''|[^'])*')|(;)|(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)"
         match = re.search(regex, comments.data)
         if match:
-            raise ValidationError("No SQL query allowed")
+            raise ValidationError("Invalid comment. Please try again")
         
-    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate , Regexp("(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)") ])
+    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate])
     submit = SubmitField('Post Comment')
     
    
