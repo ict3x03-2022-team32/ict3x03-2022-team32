@@ -348,6 +348,8 @@ def login_page():
 
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
+    if not session.get("otp"):
+            return redirect('login')
     form = OTPForm()
     ip_addr = request.remote_addr
     if current_user.is_authenticated:
@@ -387,6 +389,8 @@ def verify_page():
                 login_user(attempted_user,remember=True,duration=timedelta(seconds=600))
                 flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
                 app.logger.info(f'{ip_addr}, Successful login from {attempted_user.username}')
+                if 'otp' in session:  
+                    session.pop('otp',None)  #clear otp session
                 return redirect(url_for('dashboard'))
             else:
                 username = session['username']
