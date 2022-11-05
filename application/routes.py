@@ -1020,3 +1020,13 @@ def logs():
 def newlogs():
     with open('web.log', 'r') as f:
         return render_template('new_log.html', text=f.read())
+
+@app.route('/deleteComment-post/<int:cid>')
+@login_required
+@requires_access_level(ACCESS['admin'])
+def deleteComment(cid):
+    entry = comments.query.get_or_404(int(cid))
+    db.session.delete(entry)
+    db.session.commit()
+    flash("Comment deleted", "success")
+    return redirect(url_for("dashboard"))
