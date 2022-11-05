@@ -10,6 +10,7 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
     username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
+    #username = StringField(label='User Name:', validators=[Length(min=2, max=30), DataRequired()])
     password = PasswordField(label='Password:', validators=[Length(min=8),DataRequired()])
     submit = SubmitField(label='Sign in')
 
@@ -17,7 +18,7 @@ class LoginForm(FlaskForm):
 class UserDetailForm(FlaskForm):
     id = IntegerField('Id: ')
     username = StringField('Username: ', validators=[DataRequired()])
-    email = StringField('Email: ', validators=[DataRequired(), Email()])
+    email = StringField('Email: ', validators=[DataRequired(), Regexp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Z|a-z]{2,}$'), Email()])
     isadmin = IntegerField('Access: ')
     istimeout = IntegerField('Timed out')
     timeoutTime = DateTime("Time out Date")
@@ -63,7 +64,7 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Email Address already exists! Please try a different email address')
 
     username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
-    email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+    email_address = EmailField(label='Email Address:', validators=[DataRequired(),Regexp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Z|a-z]{2,}$')])
     password1 = PasswordField(label='Password:', validators=[Length(min=8), DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'), DataRequired()])
     isadmin = IntegerField(label="Access :")
@@ -117,7 +118,7 @@ class IndustryDataForm(FlaskForm):
          
 
 class EmailResetForm(FlaskForm):
-    email_address = EmailField(label='Email Address:', validators=[DataRequired()])
+    email_address = EmailField(label='Email Address:', validators=[DataRequired(), Regexp('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Z|a-z]{2,}$')])
     submit = SubmitField(label="Submit Email")
 
 class PasswordResetForm(FlaskForm):

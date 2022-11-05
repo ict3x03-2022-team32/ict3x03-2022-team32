@@ -45,12 +45,18 @@ h6 span {
                             <div class="col-12">
                                 {{ form.username.label(class="form-label") }}
                                 {{ form.username(class="form-control", placeholder="User Name") }}
+                                {% for error in form.username.errors %}
+                                <span style="color: red;">[{{ error }}]</span>
+                                {% endfor %}
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-12">
                                 {{ form.password.label(class="form-label") }}
                                 {{ form.password(class="form-control", placeholder="Password") }}
+                                {% for error in form.password.errors %}
+                                <span style="color: red;">[{{ error }}]</span>
+                                {% endfor %}
                             </div>
                         </div>
                         <div class="row mb-2">

@@ -15,6 +15,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
 
 #recaptcha libraries
 #import speech_recognition as sr
@@ -33,23 +35,31 @@ secret = os.environ.get("private_key")
 testregisteruser = os.environ.get("testregisteruser")
 
 
-
 ##################################################################################################################################################################################    
 def delay():
     time.sleep(random.randint(2,3))
 
-'''
+
 def test_index_page():
     ''''''
     #GIVEN the index page
     #WHEN the '/' page is requested (GET)
     #THEN check that the response is valid
     ''''''
+    option = webdriver.ChromeOptions()
 
-    driver=uc.Chrome()
+    #Comment these 2 to run locally
+    option.binary_location = "/usr/bin/google-chrome"
+    option.add_argument('--headless')
+
+    option.add_argument('--no-sandbox')
+    
+    #driver=uc.Chrome(headless=True)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/")
+    #driver.get("http://securitycrusaders:5000/")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -67,10 +77,20 @@ def test_login_page():
     #THEN check that the response is valid and the user is redirected to the dashboard page
     """
     
-    driver=uc.Chrome()
+    option = webdriver.ChromeOptions()
+    
+    #Comment these 2 to run locally
+    option.binary_location = "/usr/bin/google-chrome"
+    option.add_argument('--headless')
+    
+    option.add_argument('--no-sandbox')
+    
+    #driver=uc.Chrome(headless=True)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/login")
+    #driver.get("http://securitycrusaders:5000/login")
 
     #Check title
     title = "Data Analytics for Salary in Industries of Singapore"
@@ -92,13 +112,6 @@ def test_login_page():
     delay()
 
     #Check if user is in Dashboard page
-
-    #look for success notification
-    #success = driver.find_element(By.CLASS_NAME, "alert alert-success").text
-    #assert success[0-29] == "Success! You are logged in as:"
-
-    #time.sleep(random.randint(4,5))
-    #success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("innertext")
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:64]
     assert success == "Success! You are logged in as: "
@@ -114,14 +127,26 @@ def test_register_page():
     #THEN check that the response is valid and the new user account is created and is redirected to the dashboard page
     """
 
-    driver=uc.Chrome()
+    option = webdriver.ChromeOptions()
+
+    #Comment these 2 to run locally
+    option.binary_location = "/usr/bin/google-chrome"
+    option.add_argument('--headless')
+
+    option.add_argument('--no-sandbox')
+    
+    #driver=uc.Chrome(headless=True)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     driver.maximize_window()
     driver.get("http://localhost:5000/register")
 
     #For creating new user, increment last number by 1
     temp = testregisteruser
-    temp = temp[:-1] + str(int(temp[-1])+1)
+    if temp[-2] != '0':
+        temp = temp[:-2] + str(int(temp[-2:])+1)
+    else:
+        temp = temp[:-1] + str(int(temp[-1])+1)
 
     # This for loop scans and searches each line in the file
     # By using the input() method of fileinput module
@@ -165,11 +190,6 @@ def test_register_page():
     #Check if user is in Dashboard page
 
     #look for success notification
-    #success = driver.find_element(By.CLASS_NAME, "alert alert-success").text
-    #assert success[0-29] == "Success! You are logged in as:"
-
-    #time.sleep(random.randint(4,5))
-    #success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("innertext")
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:88]
     print ("success = success[33:88] is" + success)
@@ -178,4 +198,3 @@ def test_register_page():
     #yield
     delay()
     driver.quit()
-'''
