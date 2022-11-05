@@ -936,7 +936,7 @@ def upload():
             f.save(fullFileName)
             # Check if file is a binary or text file
             if check_IfBinaryFile(fullFileName):
-                flash('File uploaded is not a CSV or Text file', category='danger')
+                flash('File uploaded is not a valid CSV or Text file', category='danger')
                 app.logger.warning(f'{ip_addr}, %s uploaded a binary file and not a file containing text data', current_user.username)
                 os.remove(fullFileName)
                 return render_template('uploadDataset.html', form=form)
