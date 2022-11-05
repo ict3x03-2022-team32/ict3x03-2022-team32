@@ -290,6 +290,7 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     form = LoginForm()
+    ip_addr = request.remote_addr
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if form.validate_on_submit():
