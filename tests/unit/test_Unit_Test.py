@@ -29,7 +29,7 @@ testregisteruser = os.environ.get("testregisteruser")
 
 ##################################################################################################################################################################################    
 def delay():
-    time.sleep(random.randint(15,20))
+    time.sleep(random.randint(2,3))
 
 
 def test_login_page_InvalidUsernameField():
@@ -39,19 +39,19 @@ def test_login_page_InvalidUsernameField():
     #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
-    options = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
 
     #Comment these 2 to run locally
-    options.binary_location = "/usr/bin/google-chrome"
-    #options.add_argument('--headless')
+    option.binary_location = "/usr/bin/google-chrome"
+    #option.add_argument('--headless')
 
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage')
+    option.add_argument('--disable-gpu')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -62,8 +62,6 @@ def test_login_page_InvalidUsernameField():
     assert title == driver.title
 
     #recaptcha(driver)
-
-    next = None
 
     try:
         #Input a malicious "User Name"
@@ -111,18 +109,18 @@ def test_login_page_WrongPasswordField():
     #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
-    options = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
 
     #Comment these 2 to run locally
-    options.binary_location = "/usr/bin/google-chrome"
-    #options.add_argument('--headless')
+    option.binary_location = "/usr/bin/google-chrome"
+    #option.add_argument('--headless')
 
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage')
+    option.add_argument('--disable-gpu')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -180,18 +178,18 @@ def test_login_page_InvalidPasswordField():
     #THEN check that the response is valid and the user is prompt an error message and not logged in
     """
 
-    options = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
     
     #Comment these 2 to run locally
-    options.binary_location = "/usr/bin/google-chrome"
-    #options.add_argument('--headless')
+    option.binary_location = "/usr/bin/google-chrome"
+    #option.add_argument('--headless')
 
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage') 
-    options.add_argument('--disable-gpu')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     #driver.get("https://securitycrusaders.live/login")
@@ -269,18 +267,18 @@ def test_register_page_InvalidUsernameField():
     with open('data.env', 'w') as file:
         file.write(filedata)
 
-    options = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
 
     #Comment these 2 to run locally
-    options.binary_location = "/usr/bin/google-chrome"
-    #options.add_argument('--headless')
+    option.binary_location = "/usr/bin/google-chrome"
+    #option.add_argument('--headless')
 
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage') 
-    options.add_argument('--disable-gpu')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     #driver.get("https://securitycrusaders.live/register")
@@ -363,18 +361,18 @@ def test_register_page_InvalidEmailField():
     with open('data.env', 'w') as file:
         file.write(filedata)
 
-    options = webdriver.ChromeOptions()
+    option = webdriver.ChromeOptions()
 
     #Comment these 2 to run locally
-    options.binary_location = "/usr/bin/google-chrome"
-    #options.add_argument('--headless')
+    option.binary_location = "/usr/bin/google-chrome"
+    #option.add_argument('--headless')
 
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage') 
-    options.add_argument('--disable-gpu')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage') 
+    option.add_argument('--disable-gpu')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     #driver.get("https://securitycrusaders.live/register")
