@@ -9,7 +9,7 @@ import bleach
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class LoginForm(FlaskForm):
-    username = StringField(label='User Name:', validators=[Length(min=2, max=20),DataRequired()])
+    username = StringField(label='User Name:', validators=[Length(min=2, max=30), Regexp('^[a-zA-Z0-9_]+([-.][a-zA-Z0-9]+)*$'), DataRequired()])
     password = PasswordField(label='Password:', validators=[Length(min=8),DataRequired()])
     submit = SubmitField(label='Sign in')
 
@@ -41,7 +41,7 @@ class MessageDataForm(FlaskForm):
         regex="('(''|[^'])*')|(;)|(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)"
         match = re.search(regex, comments.data)
         if match:
-            raise ValidationError()
+            raise ValidationError("No SQL query allowed")
         
     comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate])
     submit = SubmitField('Post Comment')

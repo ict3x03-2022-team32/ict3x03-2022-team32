@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 import csv
+import time
 
 from application.form import UploadForm
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -76,9 +77,9 @@ def sendOTP(recipient, otp):
     msg.body = str(otp)  
     mail.send(msg)
 
-@app.errorhandler(CSRFError)
-def handle_csrf_error(e):
-    return render_template('csrf_error.html', reason=e.description), 400
+@app.route('/csrf_error')
+def handle_csrf_error():
+    return render_template('csrf_error.html'), 400
 
 def send_email(subject, recipients, html_body):
     msg = Message(subject, recipients=recipients)
@@ -147,6 +148,7 @@ def user_detail(user_id):
 def update_user(user_id):
     user = User.query.get_or_404(user_id)
     form = UserDetailForm()
+    ip_addr = request.remote_addr
 
     orig_user = user.username # get user details stored in the database - save username into a variable
 
@@ -159,6 +161,7 @@ def update_user(user_id):
             valid_user = User.query.filter_by(username=new_user).first() # query the database for the usernam
             if valid_user is not None:
                 flash("That username is already taken...", 'danger')
+                app.logger.warning(f'{ip_addr}, Username {new_user} already exists')
                 return redirect(url_for('control_panel'))
 
         # if the values are the same, we can move on.
@@ -166,6 +169,7 @@ def update_user(user_id):
         user.isadmin = request.form['access_lvl']
         db.session.commit()
         flash('The user has been updated.', 'success')
+        app.logger.info(f'{ip_addr}, Username {orig_user} is changed to {user.username}')
         return redirect(url_for('control_panel'))
 
     return redirect(url_for('control_panel'))
@@ -174,11 +178,13 @@ def update_user(user_id):
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 @requires_access_level(ACCESS['admin'])
 def delete_user(user_id):
+    ip_addr = request.remote_addr
     if request.method == 'POST': #if it's a POST request, delete the friend from the database
         user = User.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
         flash('User has been deleted.', 'success')
+        app.logger.info(f'{ip_addr}, The user, {user.username}, has been deleted')
         return redirect(url_for('control_panel'))
 
     return redirect(url_for('control_panel'))
@@ -255,6 +261,7 @@ def industry2():
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     form = RegisterForm()
+    ip_addr = request.remote_addr
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if form.validate_on_submit():
@@ -269,6 +276,7 @@ def register_page():
             db.session.commit()
             login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
             flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
+            app.logger.info(f'{ip_addr}, {user_to_create.username} has been registered.')
             return redirect(url_for('dashboard'))
         else:
             flash('Please Complete Recaptcha!', category='danger')
@@ -295,7 +303,8 @@ def login_page():
             session["attemptsLogin"] = 0
             timeout(form.username.data)
             flash('EXCEEDED limit for password attempts', category='danger')
-            return render_template('login.html', form=form)
+            app.logger.warning(f'{ip_addr}, {form.username.data} had more than 10 failed login attempts.')
+            return render_template('login.html', form=form, pub_key=pub_key)
 
         recaptcha = request.form['g-recaptcha-response']
         #success = is_human(recaptcha)
@@ -322,7 +331,7 @@ def login_page():
                         return redirect(url_for('dashboard'))  
                     else:
                         flash('Your account is being timed out', category='danger')
-                        return render_template('login.html', form=form)
+                        return render_template('login.html', form=form, pub_key=pub_key)
                 else:
                     session['username'] = form.username.data
                     otp = randint(000000,999999) #6 digit otp
@@ -337,7 +346,7 @@ def login_page():
                 attemptsLogin = attemptsLogin+1
                 session['attemptsLogin'] = attemptsLogin
                 flash('Username and password are not match! Please try again', category='danger')
-                app.logger.warning(f'Unsuccessful login from {form.username.data}')
+                app.logger.warning(f'{ip_addr}, Unsuccessful login from {form.username.data}')
         else:
             flash('Please Complete Recaptcha!', category='danger')
     return render_template('login.html', form=form, pub_key=pub_key)
@@ -346,6 +355,7 @@ def login_page():
 @app.route('/verify', methods = ["POST", "GET"])
 def verify_page():
     form = OTPForm()
+    ip_addr = request.remote_addr
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if not session.get("attemptsOTP"):
@@ -382,7 +392,7 @@ def verify_page():
                 attempted_user = User.query.filter_by(username=username).first()
                 login_user(attempted_user,remember=True,duration=timedelta(seconds=600))
                 flash(f'Success! You are logged in as: {attempted_user.username}', category='success')
-                app.logger.info(f'Successful login from {attempted_user.username}')
+                app.logger.info(f'{ip_addr}, Successful login from {attempted_user.username}')
                 return redirect(url_for('dashboard'))
             else:
                 username = session['username']
@@ -390,7 +400,7 @@ def verify_page():
                 attemptsOTP = attemptsOTP+1
                 session['attemptsOTP'] = attemptsOTP
                 flash('Invalid OTP! Please try again', category='danger')
-                app.logger.warning(f'Unsuccessful login from {attempted_user.username}')
+                app.logger.warning(f'{ip_addr}, Unsuccessful login from {attempted_user.username}')
                 return render_template('verify.html', form=form)
         else:
             flash("Please enter OTP!", category='danger' )
@@ -400,6 +410,7 @@ def verify_page():
 @app.route('/reset_email', methods=['GET', 'POST'])
 def reset_page():
     form = EmailResetForm()
+    ip_addr = request.remote_addr
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if form.validate_on_submit():
@@ -408,9 +419,15 @@ def reset_page():
         except:
             flash('You have entered an invalid email address!', category='danger')
             return render_template('reset_email.html', form=form, pub_key=pub_key)
-        password_reset_link(user.email_address)
-        flash('Please check your email for the password reset link.', 'success')
-        return redirect(url_for('login_page'))
+        recaptcha = request.form['g-recaptcha-response']
+        success = is_human(recaptcha)
+        if success:
+            password_reset_link(user.email_address)
+            flash('Please check your email for the password reset link.', 'success')
+            app.logger.info(f'{ip_addr}, {user.username} has request for password reset')
+            return redirect(url_for('login_page'))
+        else:
+            flash('Please Complete Recaptcha!', category='danger')
     return render_template('reset_email.html', form=form, pub_key=pub_key)
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
@@ -580,6 +597,7 @@ def delete3(entry_id):
 @login_required
 @limiter.limit("30/minute")
 def download():
+    ip_addr = request.remote_addr
     def without_keys(d, keys):
         return {x: d[x] for x in d if x not in keys}
 
@@ -595,6 +613,7 @@ def download():
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning(f'{ip_addr}, %s downloaded a copy of the employment data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employment_report.csv"})
 
 
@@ -604,6 +623,7 @@ def download():
 @limiter.limit("30/minute")
 @login_required
 def download1():
+    ip_addr = request.remote_addr
     def without_keys(d, keys):
         return {x: d[x] for x in d if x not in keys}
 
@@ -617,6 +637,7 @@ def download1():
         y = without_keys(u.__dict__,invalid)
         writer.writerow(y.values())
     output.seek(0)
+    app.logger.warning(f'{ip_addr}, %s downloaded a copy of the industry data from the database', current_user.username)
     return Response(output,mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=industry_report.csv"})
 
 
@@ -904,7 +925,7 @@ def get_Fileobjectsize(fobj):
 def upload():
 
     form = UploadForm()
-
+    ip_addr = request.remote_addr
     if form.validate_on_submit():
         f = form.upload.data
         #app.logger.warning('%s attempted to upload a file ', current_user.username)
@@ -916,13 +937,13 @@ def upload():
             # Check if file is a binary or text file
             if check_IfBinaryFile(fullFileName):
                 flash('File is not a csv/txt file')
-                #app.logger.warning('%s uploaded a binary file and not a file containing text data', current_user.username)
+                app.logger.warning(f'{ip_addr}, %s uploaded a binary file and not a file containing text data', current_user.username)
                 os.remove(fullFileName)
                 return render_template('uploadDataset.html', form=form)
             # Check if file is empty or file size is too large
             if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
                 flash ("File is either empty or too large")
-                #app.logger.warning('%s uploaded a file that is either empty or too large', current_user.username)
+                app.logger.warning(f'{ip_addr}, %s uploaded a file that is either empty or too large', current_user.username)
                 os.remove(fullFileName)
             else:
                 # Check if data format in CSV/txt file follows a certain format
@@ -930,13 +951,15 @@ def upload():
                     return insertDataset(fullFileName)
                 else:
                     flash ("CSV File format is incorrect", category='danger')
-                    #app.logger.warning('%s uploaded a file that does not follow dataset format', current_user.username)
+                    app.logger.warning(f'{ip_addr}, %s uploaded a file that does not follow dataset format', current_user.username)
                     os.remove(fullFileName)
         else:
-            #app.logger.warning('%s uploaded a file whose size is either too big or file whose extension is not allowed', current_user.username)
             flash('File size is either too big or file extension is not allowed', category='danger')
+            app.logger.warning(f'{ip_addr}, %s uploaded a file whose size is either too big or file whose extension is not allowed', 
+            current_user.username)
     return render_template('uploadDataset.html', form=form)
 def insertDataset(fullFileName):
+    ip_addr = request.remote_addr
     # CVS Column Names
     col_names = ['year','schoolName','degName','employmentRate','salary','industry']
     # Use Pandas to parse the CSV file
@@ -957,14 +980,13 @@ def insertDataset(fullFileName):
     except:
         # Remove file after unsuccessful data upload
         os.remove(fullFileName)
-        #app.logger.warning('%s was not successful in uploading dataset into database', current_user.username)
         flash('Dataset was not fully inserted successfully, please contact the database admin for help')
+        app.logger.warning(f'{ip_addr}, %s was not successful in uploading dataset into database', current_user.username)
         return redirect(url_for('control_panel'))
-    
+    app.logger.info(f'{ip_addr}, %s successfully uploaded dataset into database', current_user.username)
     db.session.close()
     # Remove file after successful data upload
     os.remove(fullFileName)
-    #app.logger.warning('%s successfully uploaded dataset into database', current_user.username)
     flash('Dataset Successfully uploaded')
     return redirect(url_for('control_panel'))
 
