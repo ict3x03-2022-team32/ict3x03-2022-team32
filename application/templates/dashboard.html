@@ -137,14 +137,18 @@
 <div class="container">
     <div class="w-100 mb-3">
         <h4>Comment Section</H4>
-        {% for entries in entries %}
+        {% for xentry in entries %}
         <div class='message'>
-            <h4>{{entries['cname'] }}</h4>
-            <p>{{entries['comment'] }}</p>
-            <p>{{entries['datetime']}}</p>
+            <h4>{{xentry['cname'] }}</h4>
+            <p>{{xentry['comment'] }}</p>
+            <p>{{xentry['datetime']}}</p>
+            {%if current_user.is_admin()%}
+            <a href="{{ url_for('deleteComment', cid = xentry.cid) }}" class="btn btn-outline-danger btn-sm">Delete</a>
+            {%endif%}
         </div>
         {% endfor %}
     </div>
+    {%if current_user.is_user()%}
     <div class="col-xs-10 col-sm-6 col-md-6">
         <div class="card card-style mb-2">
             <div class="card-body">
@@ -170,6 +174,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
 
 
