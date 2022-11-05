@@ -347,6 +347,7 @@ def login_page():
         
 
 @app.route('/verify', methods = ["POST", "GET"])
+@login_required
 def verify_page():
     form = OTPForm()
     ip_addr = request.remote_addr
