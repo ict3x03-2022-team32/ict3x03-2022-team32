@@ -427,6 +427,7 @@ def reset_page():
 
 @app.route('/reset_email/<token>', methods=["GET", "POST"])
 def reset_password(token):
+    ip_addr = request.remote_addr
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     try:
@@ -449,6 +450,7 @@ def reset_password(token):
         db.session.add(user)
         db.session.commit()
         flash('Your password has been updated!', 'success')
+        app.logger.info(f'{ip_addr}, %s edited password successfully', user.username)
         
         return redirect(url_for('login_page'))
 
