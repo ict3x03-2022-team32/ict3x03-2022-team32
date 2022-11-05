@@ -68,6 +68,9 @@ class User(db.Model, UserMixin):
     
 
 
+
+
+
 class IncomeExpenses(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
