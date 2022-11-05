@@ -25,6 +25,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 #import urllib
 #import pydub
 
+from pyvirtualdisplay import Display
+display = Display(visible=0, size=(800, 600))
+display.start()
 
 load_dotenv('data.env')
 
@@ -50,10 +53,10 @@ def test_index_page():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -81,10 +84,10 @@ def test_login_page():
     
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
-    
+    #option.add_argument('--headless')
+
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -131,10 +134,10 @@ def test_register_page():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)

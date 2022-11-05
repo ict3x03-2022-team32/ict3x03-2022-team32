@@ -13,6 +13,11 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
 
+#Virtual display
+from pyvirtualdisplay import Display
+display = Display(visible=0, size=(800, 600))
+display.start()
+
 load_dotenv('data.env')
 
 testuser = os.environ.get("testuser")
@@ -38,10 +43,11 @@ def test_login_page_InvalidUsernameField():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -105,10 +111,10 @@ def test_login_page_WrongPasswordField():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -136,7 +142,7 @@ def test_login_page_WrongPasswordField():
         delay()
 
         #Check if user received an error message
-        failWarning = driver.find_element(By.XPATH, "//div[@class='alert alert-danger']").get_attribute("textContent")
+        failWarning = driver.find_element(By.XPATH, '/html/body/div[1]/div[2]/div[2]').get_attribute("textContent")
         assert failWarning[33:86] == "Username and password are not match! Please try again"
         delay()
     except NoSuchElementException:
@@ -172,10 +178,10 @@ def test_login_page_InvalidPasswordField():
     
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
-    
+    #option.add_argument('--headless')
+
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -259,10 +265,10 @@ def test_register_page_InvalidUsernameField():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
@@ -351,10 +357,10 @@ def test_register_page_InvalidEmailField():
 
     #Comment these 2 to run locally
     option.binary_location = "/usr/bin/google-chrome"
-    option.add_argument('--headless')
+    #option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
-    option.add_argument('--window-size=1920,1080')
+    option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
