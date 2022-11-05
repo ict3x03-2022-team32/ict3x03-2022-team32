@@ -32,7 +32,6 @@ class Form(FlaskForm):
 
 class MessageDataForm(FlaskForm):
     def xss_validate_comment(self, comments):
-        regex = "(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)"
         match = re.search(regex, comments.data)
         if match:
             raise ValidationError("Invalid comment. Please try again")
