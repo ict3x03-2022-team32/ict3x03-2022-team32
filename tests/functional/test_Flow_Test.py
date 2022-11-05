@@ -53,11 +53,11 @@ def test_index_page():
     option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--window-size=1920,1080')
     
-    #driver=uc.Chrome(headless=True)
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
-    driver.maximize_window()
+    #driver.maximize_window()
     driver.get("http://localhost:5000/")
     #driver.get("http://securitycrusaders:5000/")
 
@@ -84,11 +84,11 @@ def test_login_page():
     option.add_argument('--headless')
     
     option.add_argument('--no-sandbox')
+    option.add_argument('--window-size=1920,1080')
     
-    #driver=uc.Chrome(headless=True)
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
-    driver.maximize_window()
+    #driver.maximize_window()
     driver.get("http://localhost:5000/login")
     #driver.get("http://securitycrusaders:5000/login")
 
@@ -134,11 +134,11 @@ def test_register_page():
     option.add_argument('--headless')
 
     option.add_argument('--no-sandbox')
+    option.add_argument('--window-size=1920,1080')
     
-    #driver=uc.Chrome(headless=True)
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
     driver.implicitly_wait(10)
-    driver.maximize_window()
+    #driver.maximize_window()
     driver.get("http://localhost:5000/register")
 
     #For creating new user, increment last number by 1
