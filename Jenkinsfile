@@ -17,7 +17,7 @@ pipeline {
 				  steps {
 				            //git(credentialsId: 'RH', branch:'development-testing', url: 'https://github.com/ict3x03-2022-team32/ict3x03-2022-team32.git')
 					    sh 'python3 --version'
-                                            sh 'python wsgi.py &'
+                                            sh 'python3 wsgi.py &'
       					    sh 'JENKINS_NODE_COOKIE=test nohup pytest'
 			      }
 		}
