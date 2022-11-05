@@ -108,7 +108,7 @@ def requires_access_level(access_level):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated: #the user is not logged in
-                return redirect(url_for('login'))
+                return redirect(url_for('login_page'))
 
             #user = User.query.filter_by(id=current_user.id).first()
 
@@ -461,6 +461,7 @@ def reset_password(token):
 
 
 @app.route('/add', methods = ["POST", "GET"])
+@requires_access_level(ACCESS['admin'])
 @login_required
 def add_expense():
     form = UserDataForm()
@@ -469,12 +470,13 @@ def add_expense():
         db.session.add(entry)
         db.session.commit()
         flash(f"{form.type.data} has been added to {form.type.data}s", "success")
-        return redirect(url_for('employment'))
+        return redirect(url_for('employments'))
     return render_template('add.html', title="Add expenses", form=form)
     
 
 
 @app.route('/addEmployment', methods = ["POST", "GET"])
+@requires_access_level(ACCESS['admin'])
 @login_required
 def add_employment():
     form = EmploymentDataForm()
@@ -491,11 +493,12 @@ def add_employment():
             db.session.add(entry)
             db.session.commit()
             flash(f"Data has been added to Employment Data", "success")
-            return redirect(url_for('employment'))
+            return redirect(url_for('employments'))
     return render_template('addEmployment.html', title="Add Employment Data", form=form)
 
 
 @app.route('/addIndustry', methods = ["POST", "GET"])
+@requires_access_level(ACCESS['admin'])
 @login_required
 def add_industry():
     form = IndustryDataForm()
@@ -519,6 +522,7 @@ def add_industry():
 
 
 @app.route('/update', methods = ['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 def update():
         if request.method == "POST":
                 entry = IncomeExpenses.query.get(request.form.get('id'))
@@ -534,6 +538,7 @@ def update():
 
 
 @app.route('/update2', methods = ['GET', 'POST'])
+@requires_access_level(ACCESS['admin'])
 def update2():
         if request.method == "POST":
             entry = employment.query.get(request.form.get('id'))            
@@ -546,10 +551,11 @@ def update2():
             db.session.commit()
             flash("Data Updated Successfully")
  
-        return redirect(url_for('employment'))
+        return redirect(url_for('employments'))
 
 
-@app.route('/update3', methods = ['GET', 'POST'])
+@app.route('/update3', methods = ['POST'])
+@requires_access_level(ACCESS['admin'])
 def update3():
         if request.method == "POST":
             entry = industry.query.get(request.form.get('id'))            
@@ -564,6 +570,7 @@ def update3():
 
 
 @app.route('/delete-post/<int:entry_id>')
+@requires_access_level(ACCESS['admin'])
 @login_required
 def delete(entry_id):
     entry = IncomeExpenses.query.get_or_404(int(entry_id))
@@ -574,16 +581,18 @@ def delete(entry_id):
 
 
 @app.route('/delete2-post/<int:entry_id>')
+@requires_access_level(ACCESS['admin'])
 @login_required
 def delete2(entry_id):
     entry = employment.query.get_or_404(int(entry_id))
     db.session.delete(entry)
     db.session.commit()
     flash("Entry deleted", "success")
-    return redirect(url_for("employment"))
+    return redirect(url_for("employments"))
 
 
 @app.route('/delete3-post/<int:entry_id>')
+@requires_access_level(ACCESS['admin'])
 @login_required
 def delete3(entry_id):
     entry = industry.query.get_or_404(int(entry_id))
@@ -921,8 +930,6 @@ def get_Fileobjectsize(fobj):
 
 @app.route('/upload', methods=['GET', 'POST'])
 @requires_access_level(ACCESS['admin'])
-# @login_required
-# @rbac.allow(['administrator'], methods=['GET', 'POST'])
 @limiter.limit("30/minute")
 def upload():
 
