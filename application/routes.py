@@ -936,13 +936,13 @@ def upload():
             f.save(fullFileName)
             # Check if file is a binary or text file
             if check_IfBinaryFile(fullFileName):
-                flash('File is not a csv/txt file')
+                flash('File is not a csv/txt file', category='danger')
                 app.logger.warning(f'{ip_addr}, %s uploaded a binary file and not a file containing text data', current_user.username)
                 os.remove(fullFileName)
                 return render_template('uploadDataset.html', form=form)
             # Check if file is empty or file size is too large
             if check_IfEmpty(fullFileName) or (os.stat(fullFileName).st_size > 1 * (1024 ** 2)):
-                flash ("File is either empty or too large")
+                flash ("File is either empty or too large", category='danger')
                 app.logger.warning(f'{ip_addr}, %s uploaded a file that is either empty or too large', current_user.username)
                 os.remove(fullFileName)
             else:
@@ -980,14 +980,14 @@ def insertDataset(fullFileName):
     except:
         # Remove file after unsuccessful data upload
         os.remove(fullFileName)
-        flash('Dataset was not fully inserted successfully, please contact the database admin for help')
+        flash('Dataset was not fully inserted successfully, please contact the database admin for help', category='danger')
         app.logger.warning(f'{ip_addr}, %s was not successful in uploading dataset into database', current_user.username)
         return redirect(url_for('control_panel'))
     app.logger.info(f'{ip_addr}, %s successfully uploaded dataset into database', current_user.username)
     db.session.close()
     # Remove file after successful data upload
     os.remove(fullFileName)
-    flash('Dataset Successfully uploaded')
+    flash('Dataset Successfully uploaded', category='success')
     return redirect(url_for('control_panel'))
 
 
