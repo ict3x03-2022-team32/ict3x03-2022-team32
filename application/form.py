@@ -121,7 +121,7 @@ class EmailResetForm(FlaskForm):
     submit = SubmitField(label="Submit Email")
 
 class PasswordResetForm(FlaskForm):
-    password =PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])    
+    password =PasswordField(label='Password:', validators=[Length(min=8), DataRequired()])    
     submit = SubmitField(label="Submit Password")                                    
 
 class UploadForm(FlaskForm):

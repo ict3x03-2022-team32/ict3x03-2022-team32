@@ -45,7 +45,8 @@ from csv import writer
 
 ALLOWED_EXTENSIONS = {'csv', 'txt'}
 script_dir = os.path.dirname(__file__)
-rel_path = "..\\tempFileUploadDir\\"
+# rel_path = "..\\tempFileUploadDir\\"
+rel_path = "..//tempFileUploadDir//"
 UPLOAD_FOLDER = os.path.join(script_dir, rel_path)
 
 mail = Mail(app)
@@ -1017,6 +1018,10 @@ def download_report():
 	finally:
 		cursor.close() 
 		conn.close()
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return 'File Too Large', 413
 
 #timeout function 
 def timeout(username):
