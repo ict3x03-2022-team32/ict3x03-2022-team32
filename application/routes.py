@@ -274,7 +274,7 @@ def register_page():
                                 password=form.password1.data, isadmin=0, istimeout=0)
             db.session.add(user_to_create)
             db.session.commit()
-            login_user(user_to_create,remember=True,duration=timedelta(seconds=600))
+            login_user(user_to_create,remember=False,duration=timedelta(seconds=600))
             flash(f"Account created successfully! You are now logged in as {user_to_create.username}", category='success')
             app.logger.info(f'{ip_addr}, {user_to_create.username} has been registered.')
             return redirect(url_for('dashboard'))

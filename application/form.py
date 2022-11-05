@@ -43,7 +43,7 @@ class MessageDataForm(FlaskForm):
         if match:
             raise ValidationError("No SQL query allowed")
         
-    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate])
+    comments = StringField('Comments', [InputRequired(), xss_validate_comment, sql_code_validate , Regexp("(<|%3C)script[\s\S]*?(>|%3E)[\s\S]*?(<|%3C)(\/|%2F)script[\s\S]*?(>|%3E)") ])
     submit = SubmitField('Post Comment')
     
    
