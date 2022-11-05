@@ -12,6 +12,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 #Virtual display
 from pyvirtualdisplay import Display
@@ -51,7 +53,7 @@ def test_login_page_InvalidUsernameField():
     option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
     
     
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),chrome_options=option)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=option)
     driver.implicitly_wait(10)
     #driver.maximize_window()
     driver.get("http://localhost:5000/login")
@@ -146,6 +148,7 @@ def test_login_page_WrongPasswordField():
         delay()
 
         #Check if user received an error message
+        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]" )))
         failWarning = driver.find_element(By.XPATH, '/html/body/div[1]/div[2]/div[2]').get_attribute("textContent")
         assert failWarning[33:86] == "Username and password are not match! Please try again"
         delay()
@@ -313,6 +316,7 @@ def test_register_page_InvalidUsernameField():
         delay()
     
         #Check if user received an error message
+        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span" )))
         fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span").get_attribute("textContent")
         assert fail == "[Invalid input.]"
         delay()
@@ -408,6 +412,7 @@ def test_register_page_InvalidEmailField():
         delay()
 
         #Check if user received an error message
+        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[3]/div/span" )))
         fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[3]/div/span").get_attribute("textContent")
         assert fail == "[Invalid input.]"
         delay()

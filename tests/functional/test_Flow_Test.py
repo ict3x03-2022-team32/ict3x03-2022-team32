@@ -17,6 +17,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 #recaptcha libraries
 #import speech_recognition as sr
@@ -119,6 +121,7 @@ def test_login_page():
     delay()
 
     #Check if user is in Dashboard page
+    WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:64]
     assert success == "Success! You are logged in as: "
@@ -199,6 +202,7 @@ def test_register_page():
     #Check if user is in Dashboard page
 
     #look for success notification
+    WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:88]
     print ("success = success[33:88] is" + success)
