@@ -148,7 +148,7 @@ def test_login_page_WrongPasswordField():
         delay()
 
         #Check if user received an error message
-        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]" )))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]" )))
         failWarning = driver.find_element(By.XPATH, '/html/body/div[1]/div[2]/div[2]').get_attribute("textContent")
         assert failWarning[33:86] == "Username and password are not match! Please try again"
         delay()
@@ -316,7 +316,7 @@ def test_register_page_InvalidUsernameField():
         delay()
     
         #Check if user received an error message
-        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span" )))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span" )))
         fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[2]/div/span").get_attribute("textContent")
         assert fail == "[Invalid input.]"
         delay()
@@ -412,7 +412,7 @@ def test_register_page_InvalidEmailField():
         delay()
 
         #Check if user received an error message
-        WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[3]/div/span" )))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[3]/div/span" )))
         fail = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[2]/div/div/div/div/form/div[3]/div/span").get_attribute("textContent")
         assert fail == "[Invalid input.]"
         delay()

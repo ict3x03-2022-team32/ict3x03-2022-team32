@@ -121,7 +121,7 @@ def test_login_page():
     delay()
 
     #Check if user is in Dashboard page
-    WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
+    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:64]
     assert success == "Success! You are logged in as: "
@@ -202,7 +202,7 @@ def test_register_page():
     #Check if user is in Dashboard page
 
     #look for success notification
-    WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
+    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[@class='alert alert-success']" )))
     success = driver.find_element(By.XPATH, "//div[@class='alert alert-success']").get_attribute("textContent")
     success = success[33:88]
     print ("success = success[33:88] is" + success)
