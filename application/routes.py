@@ -460,82 +460,6 @@ def reset_password(token):
     return render_template('password_reset.html',token=token, form=form)
 
 
-@app.route('/add', methods = ["POST", "GET"])
-@requires_access_level(ACCESS['admin'])
-@login_required
-def add_expense():
-    form = UserDataForm()
-    if form.validate_on_submit():
-        entry = IncomeExpenses(type=form.type.data, category=form.category.data, amount=form.amount.data)
-        db.session.add(entry)
-        db.session.commit()
-        flash(f"{form.type.data} has been added to {form.type.data}s", "success")
-        return redirect(url_for('employments'))
-    return render_template('add.html', title="Add expenses", form=form)
-    
-
-
-@app.route('/addEmployment', methods = ["POST", "GET"])
-@requires_access_level(ACCESS['admin'])
-@login_required
-def add_employment():
-    form = EmploymentDataForm()
-    if request.method == "POST":
-        if form.validate_on_submit():
-            year = request.form['year']
-            schoolName = request.form['schoolName']
-            degName = request.form['degName']
-            employmentRate = request.form['employmentRate']
-            salary = request.form['salary']
-            industry = request.form['industry']
-            entry = employment(year,schoolName,degName,employmentRate,salary,industry)
-
-            db.session.add(entry)
-            db.session.commit()
-            flash(f"Data has been added to Employment Data", "success")
-            return redirect(url_for('employments'))
-    return render_template('addEmployment.html', title="Add Employment Data", form=form)
-
-
-@app.route('/addIndustry', methods = ["POST", "GET"])
-@requires_access_level(ACCESS['admin'])
-@login_required
-def add_industry():
-    form = IndustryDataForm()
-    if request.method == "POST":
-        if form.validate_on_submit():
-            industryName = request.form['industryName']
-            vacancy = request.form['vacancy']
-            year = request.form['year']
-            entry = industry(industryName,vacancy,year)
-            db.session.add(entry)
-            db.session.commit()
-            flash(f"Data has been added to Industry Data", "success")
-            return redirect(url_for('industry2'))
-    return render_template('addIndustry.html', title="Add Industry Data", form=form)
-
-
-
-
-
-
-
-
-@app.route('/update', methods = ['GET', 'POST'])
-@requires_access_level(ACCESS['admin'])
-def update():
-        if request.method == "POST":
-                entry = IncomeExpenses.query.get(request.form.get('id'))
-                entry.type = request.form['type']
-                entry.email = request.form['category']
-                entry.phone = request.form['amount']
-                entry.date = request.form['date']
-                db.session.commit()
-                flash("Data Updated Successfully")
-                return redirect(url_for('index'))
-        return redirect(url_for('index'))
-
-
 
 @app.route('/update2', methods = ['GET', 'POST'])
 @requires_access_level(ACCESS['admin'])
@@ -566,18 +490,6 @@ def update3():
             flash("Data Updated Successfully")
  
         return redirect(url_for('industry2'))
-
-
-
-@app.route('/delete-post/<int:entry_id>')
-@requires_access_level(ACCESS['admin'])
-@login_required
-def delete(entry_id):
-    entry = IncomeExpenses.query.get_or_404(int(entry_id))
-    db.session.delete(entry)
-    db.session.commit()
-    flash("Entry deleted", "success")
-    return redirect(url_for("index"))
 
 
 @app.route('/delete2-post/<int:entry_id>')
@@ -906,7 +818,9 @@ def check_FileData(filename):
         file = open(filename, 'r')
         lines = file.readlines()
         for line in lines:
-            if not line.isspace() and not re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
+            if not line.isspace() and not \
+                re.match("^(\d{4}),([\w\s\&\-\(\)]{1,60}),([\w\s\&\-\(\)\#\^]{1,255}),\
+                ([+-]?(?:[0-9]*[.])?[0-9]+),(\d{1,10}),([\w\s\&\-\(\)]{1,255})$" , line):
                 return False
         return True
     except:
