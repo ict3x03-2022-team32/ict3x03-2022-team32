@@ -18,9 +18,11 @@ pwd = os.environ.get("mail_pwd")
 
 app = Flask(__name__)
 
+# logging for severity levels
 logging.basicConfig(filename = 'web.log', level=logging.DEBUG, 
 format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
+# logging for web requests are exported to a csv file
 app.config["LOG_TYPE"] = "CSV"
 Log(app)
 app.config['SECRET_KEY'] = db_key
