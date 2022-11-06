@@ -32,9 +32,16 @@ class Form(FlaskForm):
 
 class MessageDataForm(FlaskForm):
     def xss_validate_comment(self, comments):
+        regex = "(<|%3C|%3c)script[\s\S]*?(>|%3E|%3e)[\s\S]*?(<|%3C|%3c)(\/|%2F|%2f)script[\s\S]*?(>|%3E|%3e)"
+        regex1 = "<script[^>]+src"
         match = re.search(regex, comments.data)
+        match1 = re.search(regex1, comments.data)
         if match:
             raise ValidationError("Invalid comment. Please try again")
+        
+        if match1:
+            raise ValidationError("Invalid comment. Please try again")
+        
         
     def sql_code_validate(self, comments):
         regex="('(''|[^'])*')|(;)|(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)"
